@@ -353,7 +353,7 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 
 	// Ë‰eİ’è
 	float fieldOfView, screenAspect;
-	fieldOfView = 3.141592654f / 3.0f; // 60'
+	fieldOfView = 3.141592654f / 4.0f; // 45'
 	screenAspect = (float)screenWidth / (float)screenHeight;
 
 	// 3D•`‰æ—p‚ÌË‰e•ÏŠ·s—ñì¬

@@ -11,10 +11,10 @@ class SceneBase
 {
 public:
 	SceneBase(){}
-	~SceneBase(){}
+	virtual ~SceneBase(){}
 
-	virtual bool Init(DX11Manager*, HWND) = 0;
+	virtual bool Init(DX11Manager* dx3D, HWND hWnd) = 0;
 	virtual SceneID Frame() = 0;
-	virtual bool Render(DX11Manager*) = 0;
+	virtual bool Render(DX11Manager* dx3D) = 0;
 };
 

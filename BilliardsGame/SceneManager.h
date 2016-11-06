@@ -16,11 +16,11 @@ public:
 	SceneManager();
 	~SceneManager();
 
-	bool Init(SceneID, DX11Manager*, HWND);
-	bool UpdateChangeScene(DX11Manager*, HWND);
+	bool Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd);
+	bool UpdateChangeScene(DX11Manager* dx3D, HWND hWnd);
 
 	bool Frame();
-	bool Render(DX11Manager*);
+	bool Render(DX11Manager* dx3D);
 
 	bool IsChangeScene(){ return m_isChangeScene; }
 

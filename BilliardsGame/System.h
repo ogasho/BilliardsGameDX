@@ -26,11 +26,11 @@ public:
 	void Run();
 	bool Init();
 
-	LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+	LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
 	bool Frame();
-	void InitWindows(int*, int*);
+	void InitWindows(int* screenWidth, int* screenHeight);
 	void ShutdownWindows();
 
 	LPCUWSTR m_appTitle;

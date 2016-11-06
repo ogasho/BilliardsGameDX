@@ -15,11 +15,6 @@ ObjMesh::~ObjMesh()
 	SafeDeleteArr(m_vertices);
 }
 
-bool ObjMesh::LoadMTLFile(const char*)
-{
-	return true;
-}
-
 bool ObjMesh::LoadOBJFile(const char *filename)
 {
 	std::ifstream file;

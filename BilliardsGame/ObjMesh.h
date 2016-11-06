@@ -1,6 +1,8 @@
 /* Objメッシュクラス */
 // .objファイルの読み込み、管理を行う
 
+#pragma once
+/*
 #pragma region Disable Waring C4996
 //
 // Disable Warning C4996
@@ -15,35 +17,32 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif
 #pragma endregion
-
+*/
 #include <Windows.h>
 #include <DirectXMath.h>
 using namespace DirectX;
 
-#pragma once
+// Objデータ構造体
+struct ObjVertex
+{
+	XMFLOAT3 pos;
+	XMFLOAT2 tex;
+	XMFLOAT3 nor;
+};
+
 class ObjMesh
 {
 public:
-	// Objデータ構造体
-	struct ObjVertex
-	{
-		XMFLOAT3 pos;
-		XMFLOAT2 tex;
-		XMFLOAT3 nor;
-	};
-
 	ObjMesh();
 	~ObjMesh();
 
-	bool LoadMTLFile(const char*);
-	bool LoadOBJFile(const char*);
+	//bool LoadMTLFile(const char*);
+	bool LoadOBJFile(const char *filename);
 
 	ObjVertex* GetVertices(){ return m_vertices; }
 	unsigned int GetNumVertices(){ return m_numVertices; }
 
 private:
-	bool LoadFile(const char*);
-
 	ObjVertex* m_vertices;
 	unsigned int m_numVertices;
 };

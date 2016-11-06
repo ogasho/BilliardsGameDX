@@ -1,6 +1,5 @@
 /* モデルクラス */
 // モデル描画の為のバッファを管理する
-// Transform情報を持ち、ワールド行列に変換する
 
 #pragma once
 
@@ -10,6 +9,7 @@ using namespace DirectX;
 
 class Texture;
 class ObjMesh;
+struct ObjVertex;
 
 class Model
 {
@@ -21,44 +21,31 @@ private:
 		XMFLOAT3 nor;
 	};
 
-	struct Transform
-	{
-		XMFLOAT3 position;
-		XMFLOAT3 rotate;
-		XMFLOAT3 scale;
-	};
-
 public:
 	Model();
 	~Model();
 
-	bool Init(ID3D11Device*, ID3D11DeviceContext*, char*, char*);
-	void Render(ID3D11DeviceContext*);
+	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+		const char* modelFilename, const char* texFilename); // モデルデータを読み込む
+	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+		ObjMesh* loadedObj, const char* texFilename); // 既にあるモデルデータを流用する
+
+	void Render(ID3D11DeviceContext* deviceContext);
 
 	int GetIndexCount(){ return m_indexCount; }
 	ID3D11ShaderResourceView* GetTexture();
-	void GetCurrentMatrix(XMFLOAT4X4 *worldMatrix);
+	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale);
 
-	void SetPosition(float, float, float);
-	void SetRotation(float, float, float);
-	void SetScale(float, float, float);
-	void AddPosition(float, float, float);
-	void AddRotation(float, float, float);
-	void AddScale(float, float, float);
+	void AddRotation(XMFLOAT3 rotate); // 保管している回転行列に回転を追加する
 
 private:
-	bool InitBuffers(ID3D11Device*);
-	bool LoadModel(char*);
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool InitBuffers(ID3D11Device* device, unsigned int vertexCount, unsigned int indexCount, ObjVertex* objVtx);
+	bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename);
 
-	bool m_isUpdatedTransform;
-	XMFLOAT4X4 m_worldMatrix;
-	Transform m_transform;
+	XMFLOAT4X4 m_rotateMatrix;
 	ID3D11Buffer *m_vertexBuffer;
 	ID3D11Buffer *m_indexBuffer;
-	int m_vertexCount;
-	int m_indexCount;
 	Texture* m_texture;
-	ObjMesh* m_mesh;
+	unsigned int m_indexCount;
 };
 

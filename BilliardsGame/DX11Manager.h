@@ -14,9 +14,10 @@ public:
 	DX11Manager();
 	~DX11Manager();
 
-	bool Init(int, int, bool, HWND, bool, float, float);
+	bool Init(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
+		bool fullscreen, float screenDepth, float screenNear);
 
-	void Begin(float, float, float, float);
+	void Begin(float r, float g, float b, float a);
 	void End();
 
 	ID3D11Device* GetDevice(){ return m_device; }
@@ -28,6 +29,10 @@ public:
 	void GetVideoCardInfo(char* cardName, int* memory);
 
 private:
+	bool InitVideoCardInfo(int screenWidth, int screenHeight);
+	bool InitDirectX(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
+		bool fullscreen, float screenDepth, float screenNear);
+
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
 	char m_videoCardDescription[128];
@@ -45,8 +50,4 @@ private:
 
 	XMFLOAT4X4 m_projectionMatrix;
 	XMFLOAT4X4 m_orthoMatrix;
-
-	bool InitVideoCardInfo(int screenWidth, int screenHeight);
-	bool InitDirectX(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
-		bool fullscreen, float screenDepth, float screenNear);
 };

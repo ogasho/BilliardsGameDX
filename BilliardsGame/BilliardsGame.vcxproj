@@ -78,6 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Ball.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DX11Manager.cpp" />
     <ClCompile Include="InputManager.cpp" />
@@ -92,6 +93,7 @@
     <ClCompile Include="TextureShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Ball.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DX11Manager.h" />
     <ClInclude Include="DXUtil.h" />

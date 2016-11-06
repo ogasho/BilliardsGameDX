@@ -83,9 +83,15 @@ bool SceneManager::Render(DX11Manager* dx3D)
 {
 	bool result;
 
+	// ‰æ–ÊƒNƒŠƒA
+	dx3D->Begin(0.5f, 0.5f, 0.5f, 1.0f);
+
 	// ƒV[ƒ“•`‰æ
 	result = m_currentScene->Render(dx3D);
 	if (!result) return false;
+
+	// •`‰æ
+	dx3D->End();
 
 	return true;
 }

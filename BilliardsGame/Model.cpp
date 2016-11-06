@@ -9,12 +9,8 @@ Model::Model()
 	m_vertexBuffer = nullptr;
 	m_indexBuffer = nullptr;
 	m_texture = nullptr;
-	m_mesh = nullptr;
 
-	m_isUpdatedTransform = true;
-	
-	// 向き初期化
-	m_transform.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	XMStoreFloat4x4(&m_rotateMatrix, XMMatrixTranspose(XMMatrixIdentity()));
 }
 
 Model::~Model()
@@ -23,19 +19,46 @@ Model::~Model()
 	SafeRelease(m_vertexBuffer);
 	SafeRelease(m_indexBuffer);
 	SafeDelete(m_texture);
-	SafeDelete(m_mesh);
 }
 
-bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* texFilename)
+bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* modelFilename, const char* texFilename)
 {
 	bool result;
 
-	// モデルのロード
-	result = LoadModel(modelFilename);
+	// モデル情報のロード
+	ObjMesh* objMesh = new ObjMesh();
+	result = objMesh->LoadOBJFile(modelFilename);
 	if (!result) return false;
 
+	unsigned int vertexCount = objMesh->GetNumVertices();
+	m_indexCount = objMesh->GetNumVertices();
+	ObjVertex* objVtx = objMesh->GetVertices();
+
 	// 頂点バッファとインデックスバッファの初期化
-	result = InitBuffers(device);
+	result = InitBuffers(device, vertexCount, m_indexCount, objVtx);
+	if (!result) return false;
+
+	// モデルのテクスチャをロード
+	result = LoadTexture(device, deviceContext, texFilename);
+	if (!result) return false;
+
+	// ロードしたモデル情報を破棄
+	SafeDelete(objMesh);
+
+	return true;
+}
+
+bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, ObjMesh* loadedObj, const char* texFilename)
+{
+	bool result;
+
+	// 受け取ったモデル情報を利用
+	unsigned int vertexCount = loadedObj->GetNumVertices();
+	m_indexCount = loadedObj->GetNumVertices();
+	ObjVertex* objVtx = loadedObj->GetVertices();
+
+	// 頂点バッファとインデックスバッファの初期化
+	result = InitBuffers(device, vertexCount, m_indexCount, objVtx);
 	if (!result) return false;
 
 	// モデルのテクスチャをロード
@@ -58,47 +81,33 @@ void Model::Render(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-bool Model::LoadModel(char* modelFilename)
-{
-	bool result;
-
-	m_mesh = new ObjMesh();
-	result = m_mesh->LoadOBJFile(modelFilename);
-	if (!result) return false;
-
-	m_vertexCount = m_mesh->GetNumVertices();
-	m_indexCount = m_mesh->GetNumVertices();
-
-	return true;
-}
-
-bool Model::InitBuffers(ID3D11Device* device)
+bool Model::InitBuffers(ID3D11Device* device, 
+	unsigned int vertexCount, unsigned int indexCount, ObjVertex* objVtx)
 {
 	HRESULT result;
 	
 	// 頂点配列を作成
 	VertexType* vertices;
-	vertices = new VertexType[m_vertexCount];
+	vertices = new VertexType[vertexCount];
 
 	// インデックス配列を作成
 	unsigned long* indices;
-	indices = new unsigned long[m_indexCount];
+	indices = new unsigned long[indexCount];
 	
-	ObjMesh::ObjVertex* objVer = m_mesh->GetVertices();
-	for (int i = 0; i < m_vertexCount; i++)
+	// 頂点情報を入れ込む
+	for (unsigned int i = 0; i < vertexCount; i++)
 	{
-		vertices[i].pos = objVer[i].pos;
-		vertices[i].nor = objVer[i].nor;
-		vertices[i].tex = objVer[i].tex;
+		vertices[i].pos = objVtx[i].pos;
+		vertices[i].nor = objVtx[i].nor;
+		vertices[i].tex = objVtx[i].tex;
 
 		indices[i] = i;
 	}
 
-
 	// 頂点バッファの設定
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
+	vertexBufferDesc.ByteWidth = sizeof(VertexType) * vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
@@ -116,7 +125,7 @@ bool Model::InitBuffers(ID3D11Device* device)
 	// インデックスバッファの設定
 	D3D11_BUFFER_DESC indexBufferDesc;
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * indexCount;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
 	indexBufferDesc.MiscFlags = 0;
@@ -138,7 +147,7 @@ bool Model::InitBuffers(ID3D11Device* device)
 	return true;
 }
 
-bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename)
 {
 	bool result;
 
@@ -155,78 +164,30 @@ ID3D11ShaderResourceView* Model::GetTexture()
 	return m_texture->GetTexture(); 
 }
 
-void Model::GetCurrentMatrix(XMFLOAT4X4 *worldMatrix)
+void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale)
 {
-	//XMFLOAT4X4 matrix;
+	XMMATRIX matrix;
+	matrix = XMMatrixIdentity();
 
-	if (m_isUpdatedTransform)
-	{
-		XMMATRIX matrix;
-		matrix = XMMatrixIdentity();
-		matrix *= XMMatrixScaling(m_transform.scale.x, m_transform.scale.y, m_transform.scale.z);
-		matrix *= XMMatrixRotationRollPitchYaw(XMConvertToRadians(m_transform.rotate.x), XMConvertToRadians(m_transform.rotate.y), XMConvertToRadians(m_transform.rotate.z));
-		matrix *= XMMatrixTranslation(m_transform.position.x, m_transform.position.y, m_transform.position.z);
+	// スケール
+	matrix *= XMMatrixScaling(scale.x, scale.y, scale.z);
+	
+	// 回転
+	matrix *= XMLoadFloat4x4(&m_rotateMatrix);
 
-		m_isUpdatedTransform = false;
-		XMStoreFloat4x4(&m_worldMatrix, XMMatrixTranspose(matrix));
-	}
+	// 移動
+	matrix *= XMMatrixTranslation(position.x, position.y, position.z);
 
-	*worldMatrix = m_worldMatrix;
-	//*worldMatrix = matrix;
+	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
 }
 
-
-void Model::SetPosition(float x, float y, float z)
+void Model::AddRotation(XMFLOAT3 rotate)
 {
-	m_transform.position.x = x;
-	m_transform.position.y = y;
-	m_transform.position.z = z;
+	XMMATRIX matrix = XMLoadFloat4x4(&m_rotateMatrix);
 
-	m_isUpdatedTransform = true;
-}
+	// 回転方向ベクトルを任意軸としてベクトルの大きさ分回転
+	float th = (float)sqrt(rotate.x * rotate.x + rotate.y * rotate.y + rotate.z * rotate.z);
+	matrix *= XMMatrixRotationAxis(XMLoadFloat3(&rotate), th);
 
-void Model::SetRotation(float x, float y, float z)
-{
-	m_transform.rotate.x = x;
-	m_transform.rotate.y = y;
-	m_transform.rotate.z = z;
-
-	m_isUpdatedTransform = true;
-}
-
-void Model::SetScale(float x, float y, float z)
-{
-	m_transform.scale.x = x;
-	m_transform.scale.y = y;
-	m_transform.scale.z = z;
-
-	m_isUpdatedTransform = true;
-}
-
-
-void Model::AddPosition(float x, float y, float z)
-{
-	m_transform.position.x += x;
-	m_transform.position.y += y;
-	m_transform.position.z += z;
-
-	m_isUpdatedTransform = true;
-}
-
-void Model::AddRotation(float x, float y, float z)
-{
-	m_transform.rotate.x += x;
-	m_transform.rotate.y += y;
-	m_transform.rotate.z += z;
-
-	m_isUpdatedTransform = true;
-}
-
-void Model::AddScale(float x, float y, float z)
-{
-	m_transform.scale.x += x;
-	m_transform.scale.y += y;
-	m_transform.scale.z += z;
-
-	m_isUpdatedTransform = true;
+	XMStoreFloat4x4(&m_rotateMatrix, matrix);
 }

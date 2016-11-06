@@ -29,16 +29,18 @@ public:
 	TextureShader();
 	~TextureShader();
 
-	bool Init(ID3D11Device*, HWND);
-	bool Render(ID3D11DeviceContext*, int, const XMFLOAT4X4&, const XMFLOAT4X4&, const XMFLOAT4X4&,
-		ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4);
+	bool Init(ID3D11Device* device, HWND hWnd);
+	bool Render(ID3D11DeviceContext* deviceContext, int indexCount,
+		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
+		ID3D11ShaderResourceView* tex, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor);
 
 private:
-	bool InitShader(ID3D11Device*, HWND, char*, char*);
-	HRESULT LoadShaderBinary(char*, std::vector<char>*);
-	bool SetShaderParameters(ID3D11DeviceContext*, const XMFLOAT4X4&, const XMFLOAT4X4&, const XMFLOAT4X4&,
-		ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4);
-	void RenderShader(ID3D11DeviceContext*, int);
+	bool InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName, char* psFileName);
+	HRESULT LoadShaderBinary(char* filename, std::vector<char>* binaryData);
+	bool SetShaderParameters(ID3D11DeviceContext* deviceContext,
+		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
+		ID3D11ShaderResourceView* tex, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor);
+	void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
 
 	ID3D11VertexShader* m_vertexShader;
 	ID3D11PixelShader* m_pixelShader;
