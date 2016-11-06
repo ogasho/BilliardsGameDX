@@ -1,5 +1,6 @@
 #include "InputManager.h"
 
+#include <Windows.h>
 
 InputManager::InputManager()
 {
@@ -32,4 +33,28 @@ void InputManager::KeyUp(unsigned int input)
 bool InputManager::IsKeyDown(unsigned int key)
 {
 	return m_keys[key];
+}
+
+bool InputManager::IsKeyDown(UseKeys key)
+{
+	switch (key)
+	{
+	case UseKeys::Up:
+		return m_keys[VK_UP];
+
+	case UseKeys::Down:
+		return m_keys[VK_DOWN];
+
+	case UseKeys::Left:
+		return m_keys[VK_LEFT];
+
+	case UseKeys::Right:
+		return m_keys[VK_RIGHT];
+
+	case UseKeys::Enter:
+		return m_keys[VK_RETURN];
+
+	}
+
+	return false;
 }

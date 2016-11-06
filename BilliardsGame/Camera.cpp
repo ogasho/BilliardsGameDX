@@ -41,9 +41,9 @@ void Camera::Render()
 	XMVECTOR lookAtVec = XMLoadFloat3(&lookAt);
 
 	// 度数を弧度に変更、回転設定
-	float pitch = m_rot.x * 0.0174532925f;
-	float yaw = m_rot.y * 0.0174532925f;
-	float roll = m_rot.z * 0.0174532925f;
+	float pitch = XMConvertToRadians(m_rot.x);
+	float yaw = XMConvertToRadians(m_rot.y);
+	float roll = XMConvertToRadians(m_rot.z);
 	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 
 	// 原点から回転されるように補正

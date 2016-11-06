@@ -6,6 +6,7 @@
 
 #include "SceneID.h"
 #include "DX11Manager.h"
+#include "InputManager.h"
 
 class SceneBase
 {
@@ -13,8 +14,8 @@ public:
 	SceneBase(){}
 	virtual ~SceneBase(){}
 
-	virtual bool Init(DX11Manager* dx3D, HWND hWnd) = 0;
+	virtual bool Init(DX11Manager* dx3D, HWND hWnd, InputManager* inputManager) = 0;
 	virtual SceneID Frame() = 0;
-	virtual bool Render(DX11Manager* dx3D) = 0;
+	virtual bool Render() = 0;
 };
 

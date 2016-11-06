@@ -18,17 +18,17 @@ SceneManager::~SceneManager()
 	SafeDelete(m_currentScene);
 }
 
-bool SceneManager::Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd)
+bool SceneManager::Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, InputManager* inputManager)
 {
 	m_currentSceneID = firstScene;
 
-	bool result = UpdateChangeScene(dx3D, hWnd);
+	bool result = UpdateChangeScene(dx3D, hWnd, inputManager);
 	if (!result) return false;
 
 	return true;
 }
 
-bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd)
+bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, InputManager* inputManager)
 {
 	bool result;
 
@@ -50,7 +50,7 @@ bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd)
 	}
 	if (!m_currentScene) return false;
 
-	result = m_currentScene->Init(dx3D, hWnd);
+	result = m_currentScene->Init(dx3D, hWnd, inputManager);
 	if (!result) return false;
 
 	return true;
@@ -87,7 +87,7 @@ bool SceneManager::Render(DX11Manager* dx3D)
 	dx3D->Begin(0.5f, 0.5f, 0.5f, 1.0f);
 
 	// ƒV[ƒ“•`‰æ
-	result = m_currentScene->Render(dx3D);
+	result = m_currentScene->Render();
 	if (!result) return false;
 
 	// •`‰æ

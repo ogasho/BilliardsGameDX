@@ -87,7 +87,7 @@ bool System::Init()
 	
 	// シーンマネージャ初期化
 	m_sceneManager = new SceneManager;
-	result = m_sceneManager->Init(SceneID::G_NineBall, m_dx3D, m_hWnd);
+	result = m_sceneManager->Init(SceneID::G_NineBall, m_dx3D, m_hWnd, m_inputManager);
 	if (!result) return false;
 
 	return true;
@@ -147,7 +147,7 @@ bool System::Frame()
 	// シーンのフラグが変わっていたらシーンを切り替える
 	if (m_sceneManager->IsChangeScene())
 	{
-		m_sceneManager->UpdateChangeScene(m_dx3D, m_hWnd);
+		m_sceneManager->UpdateChangeScene(m_dx3D, m_hWnd, m_inputManager);
 	}
 
 	return true;

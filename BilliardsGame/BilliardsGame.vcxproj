@@ -79,6 +79,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Ball.cpp" />
+    <ClCompile Include="BilliardPhysics.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DX11Manager.cpp" />
     <ClCompile Include="InputManager.cpp" />
@@ -86,6 +87,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ObjMesh.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SceneNineBall.cpp" />
     <ClCompile Include="System.cpp" />
@@ -94,9 +96,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ball.h" />
+    <ClInclude Include="BilliardPhysics.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DX11Manager.h" />
     <ClInclude Include="DXUtil.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Light.h" />

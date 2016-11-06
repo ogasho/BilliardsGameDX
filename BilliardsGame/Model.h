@@ -34,9 +34,10 @@ public:
 
 	int GetIndexCount(){ return m_indexCount; }
 	ID3D11ShaderResourceView* GetTexture();
-	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale);
+	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 rotate, XMFLOAT3 scale);
+	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale); // Šp“x•Û‘¶—p
 
-	void AddRotation(XMFLOAT3 rotate); // •ÛŠÇ‚µ‚Ä‚¢‚é‰ñ“]s—ñ‚É‰ñ“]‚ğ’Ç‰Á‚·‚é
+	void AddRotation(const XMFLOAT3* rotate); // •ÛŠÇ‚µ‚Ä‚¢‚é‰ñ“]s—ñ‚É‰ñ“]‚ğ’Ç‰Á‚·‚é
 
 private:
 	bool InitBuffers(ID3D11Device* device, unsigned int vertexCount, unsigned int indexCount, ObjVertex* objVtx);

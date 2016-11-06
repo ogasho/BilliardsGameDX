@@ -4,6 +4,15 @@
 
 #pragma once
 
+enum class UseKeys
+{
+	Up,
+	Down,
+	Left,
+	Right,
+	Enter,
+};
+
 class InputManager
 {
 public:
@@ -16,6 +25,7 @@ public:
 	void KeyUp(unsigned int input);
 
 	bool IsKeyDown(unsigned int key);
+	bool IsKeyDown(UseKeys key);
 
 private:
 	bool m_keys[256];

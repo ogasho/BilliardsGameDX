@@ -164,6 +164,23 @@ ID3D11ShaderResourceView* Model::GetTexture()
 	return m_texture->GetTexture(); 
 }
 
+void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 rotate, XMFLOAT3 scale)
+{
+	XMMATRIX matrix;
+	matrix = XMMatrixIdentity();
+
+	// スケール
+	matrix *= XMMatrixScaling(scale.x, scale.y, scale.z);
+
+	// 回転
+	matrix *= XMMatrixRotationRollPitchYaw(rotate.x, rotate.y, rotate.z);
+
+	// 移動
+	matrix *= XMMatrixTranslation(position.x, position.y, position.z);
+
+	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
+}
+
 void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale)
 {
 	XMMATRIX matrix;
@@ -181,13 +198,11 @@ void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 
 	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
 }
 
-void Model::AddRotation(XMFLOAT3 rotate)
+void Model::AddRotation(const XMFLOAT3* rotate)
 {
 	XMMATRIX matrix = XMLoadFloat4x4(&m_rotateMatrix);
 
-	// 回転方向ベクトルを任意軸としてベクトルの大きさ分回転
-	float th = (float)sqrt(rotate.x * rotate.x + rotate.y * rotate.y + rotate.z * rotate.z);
-	matrix *= XMMatrixRotationAxis(XMLoadFloat3(&rotate), th);
+	matrix *= XMMatrixRotationRollPitchYaw(rotate->x, rotate->y, rotate->z);
 
 	XMStoreFloat4x4(&m_rotateMatrix, matrix);
 }
