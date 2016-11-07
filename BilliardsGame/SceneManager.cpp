@@ -70,7 +70,7 @@ bool SceneManager::Frame()
 	{
 		return false;
 	}
-	else if (sceneID != m_currentSceneID)
+	else
 	{
 		m_currentSceneID = sceneID;
 		m_isChangeScene = true;

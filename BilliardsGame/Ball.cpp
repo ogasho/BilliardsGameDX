@@ -2,8 +2,7 @@
 #include "DXUtil.h"
 
 #include "DX11Manager.h"
-#include "Model.h"
-#include "ObjMesh.h"
+#include "Texture.h"
 
 #include <string>
 #include <random>
@@ -15,18 +14,21 @@ static const int DEV_NUM = 20;
 
 Ball::Ball()
 {
-	m_model = nullptr;
+	m_texture = nullptr;
+
 	m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_radius = 2.8f;
 	m_isStop = true;
+
+	XMStoreFloat4x4(&m_rotateMatrix, XMMatrixTranspose(XMMatrixIdentity()));
 }
 
 Ball::~Ball()
 {
-	SafeDelete(m_model);
+	SafeDelete(m_texture);
 }
 
-bool Ball::Init(DX11Manager* dx3D, ObjMesh* objMesh, XMFLOAT3 position, int ballNumber)
+bool Ball::Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber)
 {
 	bool result;
 
@@ -38,10 +40,9 @@ bool Ball::Init(DX11Manager* dx3D, ObjMesh* objMesh, XMFLOAT3 position, int ball
 		headStr += std::to_string(ballNumber);
 	headStr += ".tga";
 
-	// モデル初期化
-	m_model = new Model;
-	result = m_model->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(),
-		objMesh, headStr.c_str());
+	// テクスチャ初期化
+	m_texture = new Texture;
+	result = m_texture->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), headStr.c_str());
 	if (!result) return false;
 
 	// 位置初期化 (ほんの少しだけブレる)
@@ -51,8 +52,8 @@ bool Ball::Init(DX11Manager* dx3D, ObjMesh* objMesh, XMFLOAT3 position, int ball
 	m_position.z += (rand() % DEV_NUM * 2 + 1) * INIT_POS_DEV - INIT_POS_DEV * DEV_NUM;
 
 	// 数字の絵が上を向くように
-	m_model->AddRotation(&XMFLOAT3(XMConvertToRadians(90), 0.0f, 0.0f));
-	m_model->AddRotation(&XMFLOAT3(0.0f, XMConvertToRadians(90), 0.0f));
+	AddRotation(&XMFLOAT3(XMConvertToRadians(90), 0.0f, 0.0f));
+	AddRotation(&XMFLOAT3(0.0f, XMConvertToRadians(90), 0.0f));
 
 	return true;
 }
@@ -63,7 +64,7 @@ bool Ball::Frame()
 	AddPosition(&m_move);
 
 	// 移動ベクトル分回転
-	m_model->AddRotation(&XMFLOAT3(m_move.z / m_radius, 0.0f, -m_move.x / m_radius));
+	AddRotation(&XMFLOAT3(m_move.z / m_radius, 0.0f, -m_move.x / m_radius));
 
 	// 移動ベクトル分減退
 	MulMoveVec(DECLINE_VEC_RATE);
@@ -81,20 +82,26 @@ bool Ball::Frame()
 	return true;
 }
 
-void Ball::Render(ID3D11DeviceContext* deviceContext)
+void Ball::GetCurrentWorldMatrix(XMFLOAT4X4 *worldMatrix)
 {
-	m_model->Render(deviceContext);
+	XMMATRIX matrix;
+	matrix = XMMatrixIdentity();
+
+	// スケール
+	matrix *= XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+
+	// 回転
+	matrix *= XMLoadFloat4x4(&m_rotateMatrix);
+
+	// 移動
+	matrix *= XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
+
+	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
 }
 
-void Ball::GetWorldMatrix(XMFLOAT4X4 *worldMatrix)
+ID3D11ShaderResourceView* Ball::GetTexture()
 {
-
-	m_model->GetWorldMatrix(worldMatrix, m_position, m_scale);
-}
-
-Model* Ball::GetModelPtr()
-{
-	return m_model;
+	return m_texture->GetTexture();
 }
 
 void Ball::AddPosition(const XMFLOAT3* addPos)
@@ -116,4 +123,13 @@ void Ball::MulMoveVec(float t)
 	m_move.x *= t;
 	m_move.y *= t;
 	m_move.z *= t;
+}
+
+void Ball::AddRotation(const XMFLOAT3* rotate)
+{
+	XMMATRIX matrix = XMLoadFloat4x4(&m_rotateMatrix);
+
+	matrix *= XMMatrixRotationRollPitchYaw(rotate->x, rotate->y, rotate->z);
+
+	XMStoreFloat4x4(&m_rotateMatrix, matrix);
 }

@@ -23,12 +23,17 @@ public:
 
 	void KeyDown(unsigned int input);
 	void KeyUp(unsigned int input);
+	void UpdateKeyState(); // フレーム更新の際に呼ぶ
 
 	bool IsKeyDown(unsigned int key);
 	bool IsKeyDown(UseKeys key);
+	bool IsFrameKeyDown(unsigned int key);
+	bool IsFrameKeyDown(UseKeys key);
 
 private:
-	bool m_keys[256];
+	unsigned int TransUseKeys(UseKeys key);
 
+	bool m_keys[256];
+	bool m_oldKeys[256];
 };
 

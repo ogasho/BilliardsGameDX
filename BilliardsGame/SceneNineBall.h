@@ -7,10 +7,10 @@
 class Camera;
 class TextureShader;
 class Light;
-class ObjMesh;
 class Ball;
 class BilliardPhysics;
 class Player;
+class Model;
 
 enum class PlayState;
 
@@ -38,5 +38,6 @@ private:
 	TextureShader* m_textureShader;
 	Light* m_light;
 	BilliardPhysics* m_physics;
+	Model* m_ballModel;
 };
 

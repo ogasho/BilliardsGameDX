@@ -9,8 +9,6 @@ Model::Model()
 	m_vertexBuffer = nullptr;
 	m_indexBuffer = nullptr;
 	m_texture = nullptr;
-
-	XMStoreFloat4x4(&m_rotateMatrix, XMMatrixTranspose(XMMatrixIdentity()));
 }
 
 Model::~Model()
@@ -38,32 +36,15 @@ bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const
 	result = InitBuffers(device, vertexCount, m_indexCount, objVtx);
 	if (!result) return false;
 
-	// モデルのテクスチャをロード
-	result = LoadTexture(device, deviceContext, texFilename);
-	if (!result) return false;
+	// モデルのテクスチャをロード (nullならロードしない)
+	if (texFilename)
+	{
+		result = LoadTexture(device, deviceContext, texFilename);
+		if (!result) return false;
+	}
 
 	// ロードしたモデル情報を破棄
 	SafeDelete(objMesh);
-
-	return true;
-}
-
-bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, ObjMesh* loadedObj, const char* texFilename)
-{
-	bool result;
-
-	// 受け取ったモデル情報を利用
-	unsigned int vertexCount = loadedObj->GetNumVertices();
-	m_indexCount = loadedObj->GetNumVertices();
-	ObjVertex* objVtx = loadedObj->GetVertices();
-
-	// 頂点バッファとインデックスバッファの初期化
-	result = InitBuffers(device, vertexCount, m_indexCount, objVtx);
-	if (!result) return false;
-
-	// モデルのテクスチャをロード
-	result = LoadTexture(device, deviceContext, texFilename);
-	if (!result) return false;
 
 	return true;
 }
@@ -161,6 +142,9 @@ bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext
 
 ID3D11ShaderResourceView* Model::GetTexture()
 {
+	if (!m_texture)
+		return nullptr;
+
 	return m_texture->GetTexture(); 
 }
 
@@ -179,30 +163,4 @@ void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 
 	matrix *= XMMatrixTranslation(position.x, position.y, position.z);
 
 	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
-}
-
-void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 scale)
-{
-	XMMATRIX matrix;
-	matrix = XMMatrixIdentity();
-
-	// スケール
-	matrix *= XMMatrixScaling(scale.x, scale.y, scale.z);
-	
-	// 回転
-	matrix *= XMLoadFloat4x4(&m_rotateMatrix);
-
-	// 移動
-	matrix *= XMMatrixTranslation(position.x, position.y, position.z);
-
-	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
-}
-
-void Model::AddRotation(const XMFLOAT3* rotate)
-{
-	XMMATRIX matrix = XMLoadFloat4x4(&m_rotateMatrix);
-
-	matrix *= XMMatrixRotationRollPitchYaw(rotate->x, rotate->y, rotate->z);
-
-	XMStoreFloat4x4(&m_rotateMatrix, matrix);
 }

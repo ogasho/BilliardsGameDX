@@ -150,6 +150,9 @@ bool System::Frame()
 		m_sceneManager->UpdateChangeScene(m_dx3D, m_hWnd, m_inputManager);
 	}
 
+	// “ü—Íî•ñXV
+	m_inputManager->UpdateKeyState();
+
 	return true;
 }
 

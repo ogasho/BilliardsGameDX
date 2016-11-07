@@ -4,8 +4,7 @@
 #pragma once
 
 class DX11Manager;
-class Model;
-class ObjMesh;
+class Texture;
 
 #include <d3d11.h>
 #include <DirectXMath.h>
@@ -17,17 +16,15 @@ public:
 	Ball();
 	~Ball();
 
-	bool Init(DX11Manager* dx3D, ObjMesh* objMesh, XMFLOAT3 position, int ballNumber);
+	bool Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber);
 	bool Frame();
 	
-	void Render(ID3D11DeviceContext* deviceContext);
-
 	void SetMoveVec(const XMFLOAT3* moveVec){ m_move = *moveVec; }
 	void AddPosition(const XMFLOAT3* addPos);
 	void AddPosition(float x, float y, float z);
 
-	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix);
-	Model* GetModelPtr();
+	void GetCurrentWorldMatrix(XMFLOAT4X4 *worldMatrix);
+	ID3D11ShaderResourceView* GetTexture();
 	float GetRadius(){ return m_radius; }
 	void GetPosition(XMFLOAT3* pos){ *pos = m_position; }
 	void GetMoveVec(XMFLOAT3* move){ *move = m_move; }
@@ -35,12 +32,14 @@ public:
 
 private:
 	void MulMoveVec(float t);
+	void AddRotation(const XMFLOAT3* rotate);
 
+	Texture* m_texture;
 	bool m_isStop;
-	Model* m_model;
 	float m_radius;
 	XMFLOAT3 m_move;
 	XMFLOAT3 m_position;
 	XMFLOAT3 m_scale;
+	XMFLOAT4X4 m_rotateMatrix;
 };
 

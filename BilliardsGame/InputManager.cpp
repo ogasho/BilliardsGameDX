@@ -18,6 +18,11 @@ void InputManager::Init()
 	{
 		m_keys[i] = false;
 	}
+
+	for (int i = 0; i < 256; i++)
+	{
+		m_oldKeys[i] = false;
+	}
 }
 
 void InputManager::KeyDown(unsigned int input)
@@ -30,31 +35,49 @@ void InputManager::KeyUp(unsigned int input)
 	m_keys[input] = false;
 }
 
+void InputManager::UpdateKeyState()
+{
+	for (int i = 0; i < 256; i++)
+	{
+		m_oldKeys[i] = m_keys[i];
+	}
+}
+
 bool InputManager::IsKeyDown(unsigned int key)
 {
 	return m_keys[key];
 }
 
+bool InputManager::IsFrameKeyDown(unsigned int key)
+{
+	return m_keys[key] && !m_oldKeys[key];
+}
+
 bool InputManager::IsKeyDown(UseKeys key)
+{
+	return IsKeyDown(TransUseKeys(key));
+}
+
+bool InputManager::IsFrameKeyDown(UseKeys key)
+{
+	return IsFrameKeyDown(TransUseKeys(key));
+}
+
+unsigned int InputManager::TransUseKeys(UseKeys key)
 {
 	switch (key)
 	{
 	case UseKeys::Up:
-		return m_keys[VK_UP];
-
+		return VK_UP;
 	case UseKeys::Down:
-		return m_keys[VK_DOWN];
-
+		return VK_DOWN;
 	case UseKeys::Left:
-		return m_keys[VK_LEFT];
-
+		return VK_LEFT;
 	case UseKeys::Right:
-		return m_keys[VK_RIGHT];
-
+		return VK_RIGHT;
 	case UseKeys::Enter:
-		return m_keys[VK_RETURN];
-
+		return VK_RETURN;
 	}
 
-	return false;
+	return 0;
 }
