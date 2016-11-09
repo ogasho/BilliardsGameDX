@@ -7,7 +7,7 @@
 #include "ObjMesh.h"
 #include "TextureShader.h"
 
-const float POCKETS_RADIUS = 3.0f;
+const float POCKETS_RADIUS = 3.5f;
 const XMFLOAT3 POCKETS_SCALE = { POCKETS_RADIUS, 1, POCKETS_RADIUS }; // ポケットスケール
 // 全てのポケットの位置をどれだけ外側に移動させるか
 const float POCKETS_OFFSET = -POCKETS_RADIUS;

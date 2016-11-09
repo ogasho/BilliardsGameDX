@@ -20,6 +20,9 @@ BilliardPhysics::~BilliardPhysics()
 
 void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 {
+	if (b1->IsPockets() || b2->IsPockets())
+		return;
+
 	float b1Rad = b1->GetRadius();
 	float b2Rad = b2->GetRadius();
 	XMFLOAT3 b1Pos, b2Pos;
