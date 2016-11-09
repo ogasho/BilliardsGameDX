@@ -1,10 +1,17 @@
 /* ビリヤードプレイヤークラス */
-// ボールを打つなどの操作を受け付ける
+// ボールを打つなどの操作受け付け、打つ方向の描画
 
 #pragma once
 
 class Ball;
 class InputManager;
+class Model;
+class DX11Manager;
+class TextureShader;
+class Light;
+
+#include <DirectXMath.h>
+using namespace DirectX;
 
 class Player
 {
@@ -12,15 +19,21 @@ public:
 	Player();
 	~Player();
 
-	void UpdateInput(InputManager* input);
+	bool Init(DX11Manager* dx3D);
+
+	void UpdateInput(const InputManager* input);
 	void ShotBall(Ball* b);
+	bool Render(DX11Manager* dx3D, TextureShader* textureShader,
+		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light, const Ball* ball);
 
 	void ResetDecideShot(){ m_isDecideShot = false; }
-	bool IsDecideShot(){ return m_isDecideShot; }
+	bool IsDecideShot()const{ return m_isDecideShot; }
 
 private:
 	float m_shotPower;
 	float m_shotDirection;
 	bool m_isDecideShot;
+
+	Model* m_guideModel;
 };
 

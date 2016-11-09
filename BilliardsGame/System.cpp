@@ -6,6 +6,8 @@
 #include "SceneManager.h"
 #include "DX11Manager.h"
 
+const SceneID START_SCENE = SceneID::G_NineBall;
+
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -87,7 +89,7 @@ bool System::Init()
 	
 	// シーンマネージャ初期化
 	m_sceneManager = new SceneManager;
-	result = m_sceneManager->Init(SceneID::G_NineBall, m_dx3D, m_hWnd, m_inputManager);
+	result = m_sceneManager->Init(START_SCENE, m_dx3D, m_hWnd, m_inputManager);
 	if (!result) return false;
 
 	return true;

@@ -43,27 +43,27 @@ void InputManager::UpdateKeyState()
 	}
 }
 
-bool InputManager::IsKeyDown(unsigned int key)
+bool InputManager::IsKeyDown(unsigned int key)const
 {
 	return m_keys[key];
 }
 
-bool InputManager::IsFrameKeyDown(unsigned int key)
+bool InputManager::IsFrameKeyDown(unsigned int key)const
 {
 	return m_keys[key] && !m_oldKeys[key];
 }
 
-bool InputManager::IsKeyDown(UseKeys key)
+bool InputManager::IsKeyDown(UseKeys key)const
 {
 	return IsKeyDown(TransUseKeys(key));
 }
 
-bool InputManager::IsFrameKeyDown(UseKeys key)
+bool InputManager::IsFrameKeyDown(UseKeys key)const
 {
 	return IsFrameKeyDown(TransUseKeys(key));
 }
 
-unsigned int InputManager::TransUseKeys(UseKeys key)
+unsigned int InputManager::TransUseKeys(UseKeys key)const
 {
 	switch (key)
 	{

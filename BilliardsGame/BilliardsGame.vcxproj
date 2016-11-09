@@ -90,7 +90,9 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SceneNineBall.cpp" />
+    <ClCompile Include="SceneRotation.cpp" />
     <ClCompile Include="System.cpp" />
+    <ClCompile Include="Table.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureShader.cpp" />
   </ItemGroup>
@@ -109,7 +111,9 @@
     <ClInclude Include="SceneID.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SceneNineBall.h" />
+    <ClInclude Include="SceneRotation.h" />
     <ClInclude Include="System.h" />
+    <ClInclude Include="Table.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureShader.h" />
   </ItemGroup>

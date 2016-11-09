@@ -27,12 +27,15 @@ public:
 
 	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 		const char* modelFilename, const char* texFilename);
+	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+		const ObjMesh* objMesh, const char* texFilename);
 
 	void Render(ID3D11DeviceContext* deviceContext);
+	void UpdateWorldMatrix(const XMFLOAT3& position, const XMFLOAT3& rotate, const XMFLOAT3& scale);
 
-	int GetIndexCount(){ return m_indexCount; }
+	int GetIndexCount()const{ return m_indexCount; }
 	ID3D11ShaderResourceView* GetTexture();
-	void GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 rotate, XMFLOAT3 scale);
+	void GetWorldMatrix(XMFLOAT4X4* matrix)const{ *matrix = m_worldMatrix; }
 
 private:
 	bool InitBuffers(ID3D11Device* device, unsigned int vertexCount, unsigned int indexCount, ObjVertex* objVtx);
@@ -40,6 +43,7 @@ private:
 
 	ID3D11Buffer *m_vertexBuffer;
 	ID3D11Buffer *m_indexBuffer;
+	XMFLOAT4X4 m_worldMatrix;
 	Texture* m_texture;
 	unsigned int m_indexCount;
 };

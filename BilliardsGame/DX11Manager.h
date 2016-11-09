@@ -20,11 +20,11 @@ public:
 	void Begin(float r, float g, float b, float a);
 	void End();
 
-	ID3D11Device* GetDevice(){ return m_device; }
-	ID3D11DeviceContext* GetDeviceContext(){ return m_deviceContext; }
+	ID3D11Device* GetDevice()const{ return m_device; }
+	ID3D11DeviceContext* GetDeviceContext()const{ return m_deviceContext; }
 
-	void GetProjectionMatrix(XMFLOAT4X4* projectionMatrix){ *projectionMatrix = m_projectionMatrix; }
-	void GetOrthoMatrix(XMFLOAT4X4* orthoMatrix){ *orthoMatrix = m_orthoMatrix; }
+	void GetProjectionMatrix(XMFLOAT4X4* projectionMatrix)const{ *projectionMatrix = m_projectionMatrix; }
+	void GetOrthoMatrix(XMFLOAT4X4* orthoMatrix)const{ *orthoMatrix = m_orthoMatrix; }
 
 	void GetVideoCardInfo(char* cardName, int* memory);
 

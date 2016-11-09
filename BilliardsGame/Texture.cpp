@@ -74,11 +74,6 @@ bool Texture::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, con
 	return true;
 }
 
-ID3D11ShaderResourceView* Texture::GetTexture()
-{
-	return m_textureView;
-}
-
 bool Texture::LoadTarga(const char* filename, int* width, int* height)
 {
 	FILE* filePtr;

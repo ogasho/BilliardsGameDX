@@ -17,8 +17,8 @@ public:
 	SceneManager();
 	~SceneManager();
 
-	bool Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, InputManager* inputManager);
-	bool UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, InputManager* inputManager);
+	bool Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager);
+	bool UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager);
 
 	bool Frame();
 	bool Render(DX11Manager* dx3D);

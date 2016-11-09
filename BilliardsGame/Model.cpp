@@ -49,6 +49,28 @@ bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const
 	return true;
 }
 
+bool Model::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const ObjMesh* objMesh, const char* texFilename)
+{
+	bool result;
+
+	unsigned int vertexCount = objMesh->GetNumVertices();
+	m_indexCount = objMesh->GetNumVertices();
+	ObjVertex* objVtx = objMesh->GetVertices();
+
+	// 頂点バッファとインデックスバッファの初期化
+	result = InitBuffers(device, vertexCount, m_indexCount, objVtx);
+	if (!result) return false;
+
+	// モデルのテクスチャをロード (nullならロードしない)
+	if (texFilename)
+	{
+		result = LoadTexture(device, deviceContext, texFilename);
+		if (!result) return false;
+	}
+
+	return true;
+}
+
 void Model::Render(ID3D11DeviceContext* deviceContext)
 {
 	unsigned int stride = sizeof(VertexType);
@@ -148,7 +170,7 @@ ID3D11ShaderResourceView* Model::GetTexture()
 	return m_texture->GetTexture(); 
 }
 
-void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 rotate, XMFLOAT3 scale)
+void Model::UpdateWorldMatrix(const XMFLOAT3& position, const XMFLOAT3& rotate, const XMFLOAT3& scale)
 {
 	XMMATRIX matrix;
 	matrix = XMMatrixIdentity();
@@ -162,5 +184,6 @@ void Model::GetWorldMatrix(XMFLOAT4X4 *worldMatrix, XMFLOAT3 position, XMFLOAT3 
 	// 移動
 	matrix *= XMMatrixTranslation(position.x, position.y, position.z);
 
-	XMStoreFloat4x4(worldMatrix, XMMatrixTranspose(matrix));
+	XMStoreFloat4x4(&m_worldMatrix, XMMatrixTranspose(matrix));
 }
+

@@ -25,13 +25,13 @@ public:
 	void KeyUp(unsigned int input);
 	void UpdateKeyState(); // フレーム更新の際に呼ぶ
 
-	bool IsKeyDown(unsigned int key);
-	bool IsKeyDown(UseKeys key);
-	bool IsFrameKeyDown(unsigned int key);
-	bool IsFrameKeyDown(UseKeys key);
+	bool IsKeyDown(unsigned int key)const;
+	bool IsKeyDown(UseKeys key)const;
+	bool IsFrameKeyDown(unsigned int key)const;
+	bool IsFrameKeyDown(UseKeys key)const;
 
 private:
-	unsigned int TransUseKeys(UseKeys key);
+	unsigned int TransUseKeys(UseKeys key)const;
 
 	bool m_keys[256];
 	bool m_oldKeys[256];

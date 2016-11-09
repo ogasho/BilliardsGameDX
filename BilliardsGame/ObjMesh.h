@@ -24,8 +24,8 @@ public:
 	//bool LoadMTLFile(const char*);
 	bool LoadOBJFile(const char *filename);
 
-	ObjVertex* GetVertices(){ return m_vertices; }
-	unsigned int GetNumVertices(){ return m_numVertices; }
+	ObjVertex* GetVertices()const{ return m_vertices; }
+	unsigned int GetNumVertices()const{ return m_numVertices; }
 
 private:
 	ObjVertex* m_vertices;

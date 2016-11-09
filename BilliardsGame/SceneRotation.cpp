@@ -1,4 +1,4 @@
-#include "SceneNineBall.h"
+#include "SceneRotation.h"
 #include "DXUtil.h"
 
 #include "Camera.h"
@@ -14,15 +14,17 @@ const bool DEBUG_FRAME = false;
 const UseKeys DEBUG_FRAME_UPDATE_KEY = UseKeys::Enter;
 const char DEBUG_FRAME_PLAY_KEY = 'U';
 
-// ナインボール初期座標(キュー,123456789)
-// 1,56,492,87,3 のひし形配置になるように座標を等間隔にずらす
+// ローテーション初期座標
+// 1/ 7 8/ 11 12 13/ 9 14 15 10/ 2 4 5 6 3 の三角配置になるように座標を等間隔にずらす
 const XMFLOAT2 BSET{ 5.0f, 3.0f };
 const XMFLOAT3 BALLS_INIT_POS[] =
 { XMFLOAT3(-50, 0, 0),
-XMFLOAT3(50 + BSET.x * 0, 0, BSET.y * 0), XMFLOAT3(50 + BSET.x * 2, 0, BSET.y *-2), XMFLOAT3(50.0f + BSET.x * 4, 0, BSET.y * 0),
-XMFLOAT3(50 + BSET.x * 2, 0, BSET.y * 2), XMFLOAT3(50 + BSET.x * 1, 0, BSET.y *-1), XMFLOAT3(50.0f + BSET.x * 1, 0, BSET.y * 1),
-XMFLOAT3(50 + BSET.x * 3, 0, BSET.y *-1), XMFLOAT3(50 + BSET.x * 3, 0, BSET.y * 1), XMFLOAT3(50.0f + BSET.x * 2, 0, BSET.y * 0) };
-const int NUM_BALL = 10;
+XMFLOAT3(50 + BSET.x * 0, 0, BSET.y * 0), XMFLOAT3(50 + BSET.x * 4, 0, BSET.y *-4), XMFLOAT3(50.0f + BSET.x * 4, 0, BSET.y * 4),
+XMFLOAT3(50 + BSET.x * 4, 0, BSET.y *-2), XMFLOAT3(50 + BSET.x * 4, 0, BSET.y * 0), XMFLOAT3(50.0f + BSET.x * 4, 0, BSET.y * 2),
+XMFLOAT3(50 + BSET.x * 1, 0, BSET.y *-1), XMFLOAT3(50 + BSET.x * 1, 0, BSET.y * 1), XMFLOAT3(50.0f + BSET.x * 3, 0, BSET.y *-3),
+XMFLOAT3(50 + BSET.x * 3, 0, BSET.y * 3), XMFLOAT3(50 + BSET.x * 2, 0, BSET.y *-2), XMFLOAT3(50.0f + BSET.x * 2, 0, BSET.y * 0), 
+XMFLOAT3(50 + BSET.x * 2, 0, BSET.y * 2), XMFLOAT3(50 + BSET.x * 3, 0, BSET.y *-1), XMFLOAT3(50.0f + BSET.x * 3, 0, BSET.y * 1)};
+const int NUM_BALL = 16;
 const float TABLE_WIDTH = 200.0f;
 const float TABLE_HEIGHT = 100.0f;
 
@@ -32,7 +34,7 @@ enum class PlayState
 	Shot		// ボールを打っている
 };
 
-SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager)
+SceneRotation::SceneRotation(DX11Manager* dx3D, const InputManager* inputManager)
 	:SceneBase(dx3D, inputManager)
 {
 	m_camera = nullptr;
@@ -46,7 +48,7 @@ SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager
 	m_playState = PlayState::Control;
 }
 
-SceneNineBall::~SceneNineBall()
+SceneRotation::~SceneRotation()
 {
 	SafeDelete(m_camera);
 	SafeDelete(m_player);
@@ -62,7 +64,7 @@ SceneNineBall::~SceneNineBall()
 	SafeDeleteArr(m_balls);
 }
 
-bool SceneNineBall::Init(HWND hWnd)
+bool SceneRotation::Init(HWND hWnd)
 {
 	bool result;
 
@@ -108,7 +110,7 @@ bool SceneNineBall::Init(HWND hWnd)
 	return true;
 }
 
-SceneID SceneNineBall::Frame()
+SceneID SceneRotation::Frame()
 {
 	SceneID result = SceneID::Keep;
 
@@ -129,20 +131,14 @@ SceneID SceneNineBall::Frame()
 		result = SceneID::Reset;
 	// Eキーが押されたらモードを変える
 	if (m_inputManager->IsFrameKeyDown('E'))
-		result = SceneID::G_Rotation;
+		result = SceneID::G_NineBall;
 
 	return result;
 }
 
-SceneID SceneNineBall::UpdateControl()
+SceneID SceneRotation::UpdateControl()
 {
 	m_player->UpdateInput(m_inputManager);
-
-	// 白球が死んでいたら復活(場所指定実装は後で)
-	if (m_balls[0]->IsPockets())
-	{
-		m_balls[0]->Restore(XMFLOAT3(0, 0, 0));
-	}
 
 	// 打つ方向が決まったら打つ
 	if (m_player->IsDecideShot())
@@ -155,7 +151,7 @@ SceneID SceneNineBall::UpdateControl()
 
 }
 
-SceneID SceneNineBall::UpdateShot()
+SceneID SceneRotation::UpdateShot()
 {
 	// コマ送りデバッグ
 	if (DEBUG_FRAME)
@@ -179,7 +175,7 @@ SceneID SceneNineBall::UpdateShot()
 		m_physics->UpdateHitBallAndTable(m_balls[i], m_table->GetTableWidth(), m_table->GetTableHeight());
 		m_physics->UpdateHitBallAndPockets(m_balls[i], m_table);
 	}
-	
+
 	// ボール移動
 	for (int i = 0; i < NUM_BALL; i++)
 	{
@@ -209,7 +205,7 @@ SceneID SceneNineBall::UpdateShot()
 	return SceneID::Keep;
 }
 
-bool SceneNineBall::Render()
+bool SceneRotation::Render()
 {
 	XMFLOAT4X4 viewMatrix, projectionMatrix;
 	bool result;
@@ -239,6 +235,6 @@ bool SceneNineBall::Render()
 	{
 		m_player->Render(m_dx3D, m_textureShader, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}
-	
+
 	return true;
 }

@@ -23,7 +23,7 @@ public:
 	~Texture();
 
 	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename);
-	ID3D11ShaderResourceView* GetTexture();
+	ID3D11ShaderResourceView* GetTexture()const{ return m_textureView; }
 
 private:
 	bool LoadTarga(const char* filename, int* width, int* height);
@@ -32,4 +32,3 @@ private:
 	ID3D11Texture2D* m_texture;
 	ID3D11ShaderResourceView* m_textureView;
 };
-

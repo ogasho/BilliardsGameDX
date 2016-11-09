@@ -5,6 +5,7 @@
 #include "DX11Manager.h"
 #include "SceneBase.h"
 #include "SceneNineBall.h"
+#include "SceneRotation.h"
 
 SceneManager::SceneManager()
 {
@@ -18,7 +19,7 @@ SceneManager::~SceneManager()
 	SafeDelete(m_currentScene);
 }
 
-bool SceneManager::Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, InputManager* inputManager)
+bool SceneManager::Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager)
 {
 	m_currentSceneID = firstScene;
 
@@ -28,7 +29,7 @@ bool SceneManager::Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, InputM
 	return true;
 }
 
-bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, InputManager* inputManager)
+bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager)
 {
 	bool result;
 
@@ -45,12 +46,16 @@ bool SceneManager::UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, InputManager*
 		break;
 
 	case SceneID::G_NineBall: // メインゲーム(ナインボール)
-		m_currentScene = new SceneNineBall;
+		m_currentScene = new SceneNineBall(dx3D, inputManager);
+		break;
+
+	case SceneID::G_Rotation: // メインゲーム(ローテーション)
+		m_currentScene = new SceneRotation(dx3D, inputManager);
 		break;
 	}
 	if (!m_currentScene) return false;
 
-	result = m_currentScene->Init(dx3D, hWnd, inputManager);
+	result = m_currentScene->Init(hWnd);
 	if (!result) return false;
 
 	return true;
@@ -60,20 +65,28 @@ bool SceneManager::Frame()
 {
 	SceneID sceneID = SceneID::Keep;
 	
+	// 現在のシーンを更新、IDを取得
 	sceneID = m_currentScene->Frame();
 
-	if (sceneID == SceneID::Keep)
-	{
-		return true;
-	}
-	else if (sceneID == SceneID::Exit)
+	// ID情報によってシーンの状態を変える
+	if (sceneID == SceneID::Exit)
 	{
 		return false;
 	}
-	else
+	else if (sceneID == SceneID::Keep)
+	{
+		return true;
+	}
+	else if (sceneID == SceneID::Reset)
+	{
+		m_isChangeScene = true;
+		return true;
+	}
+	else if (sceneID != m_currentSceneID)
 	{
 		m_currentSceneID = sceneID;
 		m_isChangeScene = true;
+		return true;
 	}
 
 	return true;

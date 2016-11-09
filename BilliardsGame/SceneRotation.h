@@ -1,5 +1,5 @@
-/* メインゲーム(ナインボール)クラス */
-// ナインボールルールのビリヤードゲームを運用する
+/* メインゲーム(ローテーション)クラス */
+// ローテーションルールのビリヤードゲームを運用する
 
 #pragma once
 #include "SceneBase.h"
@@ -14,11 +14,11 @@ class Table;
 
 enum class PlayState;
 
-class SceneNineBall : public SceneBase
+class SceneRotation : public SceneBase
 {
 public:
-	SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager);
-	~SceneNineBall();
+	SceneRotation(DX11Manager* dx3D, const InputManager* inputManager);
+	~SceneRotation();
 
 	bool Init(HWND hWnd);
 	SceneID Frame();

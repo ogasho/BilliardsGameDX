@@ -7,7 +7,9 @@
 enum class SceneID
 {
 	Title,			// タイトル
-	G_NineBall,		// メインゲーム
+	G_NineBall,		// メインゲーム(ナインボール)
+	G_Rotation,		// メインゲーム(ローテーション)
 	Exit,			// ゲームを終了
 	Keep,			// シーンはそのまま
+	Reset,			// シーンを再生成する
 };

@@ -11,11 +11,20 @@
 class SceneBase
 {
 public:
-	SceneBase(){}
+	SceneBase(DX11Manager* dx3D, const InputManager* inputManager)
+	{
+		m_dx3D = dx3D; 
+		m_inputManager = inputManager; 
+		return;
+	}
 	virtual ~SceneBase(){}
 
-	virtual bool Init(DX11Manager* dx3D, HWND hWnd, InputManager* inputManager) = 0;
+	virtual bool Init(HWND hWnd) = 0;
 	virtual SceneID Frame() = 0;
 	virtual bool Render() = 0;
+
+protected:
+	const InputManager* m_inputManager;
+	DX11Manager* m_dx3D;
 };
 
