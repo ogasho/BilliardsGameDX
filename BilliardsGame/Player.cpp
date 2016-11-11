@@ -11,7 +11,7 @@
 
 #include <string>
 
-#define MAX_SHOT_POWER 5.0f
+#define MAX_SHOT_POWER 5.5f
 #define SPEED_ROTATE_DIR 2.0f
 #define SPEED_CHANGE_POW 0.1f
 

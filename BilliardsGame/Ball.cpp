@@ -11,7 +11,7 @@
 
 static const float DECLINE_VEC_RATE = 0.995f; // 移動ベクトルの減退
 static const float STOP_VEC_VALUE = 0.01f; // 移動量がこの値以下になったら停止する
-static const float BRAKE_VEC_RATE = 0.99f; // ブレーキ時の移動ベクトルの減退
+static const float BRAKE_VEC_RATE = 0.95f; // ブレーキ時の移動ベクトルの減退
 static const float BRAKE_VEC_VALUE = 0.1f; // 移動量がこの値以下になったらブレーキする
 static const float INIT_POS_DEV = 0.005f; // 初期座標にこの値*(+-DEV_NUM)の誤差が生まれる
 static const int DEV_NUM = 20;

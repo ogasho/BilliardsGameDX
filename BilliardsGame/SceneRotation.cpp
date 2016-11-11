@@ -140,6 +140,12 @@ SceneID SceneRotation::UpdateControl()
 {
 	m_player->UpdateInput(m_inputManager);
 
+	// ”’‹…‚ªŽ€‚ñ‚Å‚¢‚½‚ç•œŠˆ(êŠŽw’èŽÀ‘•‚ÍŒã‚Å)
+	if (m_balls[0]->IsPockets())
+	{
+		m_balls[0]->Restore(XMFLOAT3(0, 0, 0));
+	}
+
 	// ‘Å‚Â•ûŒü‚ªŒˆ‚Ü‚Á‚½‚ç‘Å‚Â
 	if (m_player->IsDecideShot())
 	{

@@ -62,7 +62,9 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tableHeight)
 {
 	// Œ»Ý‚Ìƒe[ƒuƒ‹‚Ì“–‚½‚è”»’è‚Í‹éŒ`
-	// —]—T‚ª‚ ‚Á‚½‚çü‚ÌW‡‚Éc
+	// —]—T‚ª‚ ‚Á‚½‚çü‚ÌW‡‚É«
+	// (ÚGðŒ‡@:Œ»ÝÀ•W‚©‚çˆÚ“®æÀ•W‚Ü‚Å‚Ìü•ª‚ÆA•Ç‚Ìü•ª‚ªŒð·‚µ‚Ä‚¢‚é‚©B)
+	// (ÚGðŒ‡A:ˆÚ“®ƒxƒNƒgƒ‹‚Æ•Ç‚Ì–@ü‚Ì‚È‚·Šp‚ª“ÝŠp‚Å‚ ‚é‚©B)
 
 	float ballRadius = b->GetRadius();
 	XMFLOAT3 ballPos;
@@ -72,20 +74,31 @@ void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tab
 
 	// •Ç‚ÉÚG‚µ‚½‚ç”½ŽË
 	// XŽ²
-	if (-(tableWidth / 2) > ballPos.x- ballRadius ||
-		(tableWidth / 2) < ballPos.x + ballRadius)
+	if (-(tableWidth / 2) > ballPos.x - ballRadius)
 	{
 		ballMove = XMFLOAT3(-ballMove.x, ballMove.y, ballMove.z);
 		b->SetMoveVec(ballMove);
-		b->AddPosition(ballMove);
+		b->SetPosition(XMFLOAT3(-tableWidth / 2 + ballRadius, ballPos.y, ballPos.z));
 	}
+	else if ((tableWidth / 2) < ballPos.x + ballRadius)
+	{
+		ballMove = XMFLOAT3(-ballMove.x, ballMove.y, ballMove.z);
+		b->SetMoveVec(ballMove);
+		b->SetPosition(XMFLOAT3(tableWidth / 2 - ballRadius, ballPos.y, ballPos.z));
+	}
+
 	// ZŽ²
-	if (-(tableHeight / 2) > ballPos.z - ballRadius ||
-		(tableHeight / 2) < ballPos.z + ballRadius)
+	if (-(tableHeight / 2) > ballPos.z - ballRadius)
 	{
 		ballMove = XMFLOAT3(ballMove.x, ballMove.y, -ballMove.z);
 		b->SetMoveVec(ballMove);
-		b->AddPosition(ballMove);
+		b->SetPosition(XMFLOAT3(ballPos.x, ballPos.y, -tableHeight / 2 + ballRadius));
+	}
+	else if ((tableHeight / 2) < ballPos.z + ballRadius)
+	{
+		ballMove = XMFLOAT3(ballMove.x, ballMove.y, -ballMove.z);
+		b->SetMoveVec(ballMove);
+		b->SetPosition(XMFLOAT3(ballPos.x, ballPos.y, tableHeight / 2 - ballRadius));
 	}
 }
 
