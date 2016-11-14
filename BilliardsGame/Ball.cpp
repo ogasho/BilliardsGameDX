@@ -6,7 +6,6 @@
 #include "TextureShader.h"
 #include "Light.h"
 
-#include <string>
 #include <random>
 
 static const float DECLINE_VEC_RATE = 0.995f; // 移動ベクトルの減退
@@ -37,16 +36,15 @@ bool Ball::Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjM
 	bool result;
 
 	// ロードするテクスチャの名前を確定 "data/b(番号).tga" 0はキュー
-	std::string headStr = "data/b";
+	char texName[20];
 	if (ballNumber == 0)
-		headStr += "q";
+		strcpy_s(texName, 20, "data/bq.tga");
 	else
-		headStr += std::to_string(ballNumber);
-	headStr += ".tga";
+		sprintf_s(texName, 20, "data/b%d.tga", ballNumber);
 
 	// モデル初期化
 	m_model = new Model;
-	result = m_model->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), ballMesh, headStr.c_str());
+	result = m_model->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), ballMesh, texName);
 	if (!result) return false;
 
 	// 位置初期化 (ほんの少しだけブレる)

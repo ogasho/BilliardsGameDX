@@ -8,6 +8,10 @@ using namespace DirectX;
 
 // ボールがポケットに内包していた時、ボールがこの速度ベクトル以下だったらポケットされる
 const float POCKETS_DICISION_VEC = 0.05f;
+// ポケットゾーンにいる時の減退率
+const float POCKETS_PULL_RATE = 0.8f;
+// 接触した際の摩擦による減退率
+const float FRICTION_RATE = 0.98f;
 
 BilliardPhysics::BilliardPhysics()
 {
@@ -35,11 +39,14 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	if (abs(b1Pos.z - b2Pos.z) > b1Rad + b2Rad)
 		return;
 
-	// 距離で当たり判定
+	// 距離で当たり判定 二乗比較
 	XMFLOAT3 dirVec(b1Pos.x - b2Pos.x, 0.0f, b1Pos.z - b2Pos.z);
-	float distance = sqrt(dirVec.x * dirVec.x + dirVec.z * dirVec.z);
-	if (distance > b1Rad + b2Rad)
+	float distance = dirVec.x * dirVec.x + dirVec.z * dirVec.z;
+	if (distance > (b1Rad + b2Rad) * (b1Rad + b2Rad))
 		return;
+
+	// ルート化
+	distance = sqrt(distance);
 
 	XMFLOAT3 b1Move, b2Move;
 	b1->GetMoveVec(&b1Move);
@@ -55,6 +62,12 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	b1Move.z += dirNorVec.z * rebound;
 	b2Move.z -= dirNorVec.z * rebound;
 
+	// 接触による減退
+	b1Move.x *= FRICTION_RATE;
+	b1Move.z *= FRICTION_RATE;
+	b2Move.x *= FRICTION_RATE;
+	b2Move.z *= FRICTION_RATE;
+
 	b1->SetMoveVec(b1Move);
 	b2->SetMoveVec(b2Move);
 }
@@ -66,6 +79,7 @@ void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tab
 	// (接触条件①:現在座標から移動先座標までの線分と、壁の線分が交差しているか。)
 	// (接触条件②:移動ベクトルと壁の法線のなす角が鈍角であるか。)
 
+	bool isHit = false;
 	float ballRadius = b->GetRadius();
 	XMFLOAT3 ballPos;
 	b->GetPosition(&ballPos);
@@ -77,28 +91,37 @@ void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tab
 	if (-(tableWidth / 2) > ballPos.x - ballRadius)
 	{
 		ballMove = XMFLOAT3(-ballMove.x, ballMove.y, ballMove.z);
-		b->SetMoveVec(ballMove);
 		b->SetPosition(XMFLOAT3(-tableWidth / 2 + ballRadius, ballPos.y, ballPos.z));
+		isHit = true;
 	}
 	else if ((tableWidth / 2) < ballPos.x + ballRadius)
 	{
 		ballMove = XMFLOAT3(-ballMove.x, ballMove.y, ballMove.z);
-		b->SetMoveVec(ballMove);
 		b->SetPosition(XMFLOAT3(tableWidth / 2 - ballRadius, ballPos.y, ballPos.z));
+		isHit = true;
 	}
 
 	// Z軸
 	if (-(tableHeight / 2) > ballPos.z - ballRadius)
 	{
 		ballMove = XMFLOAT3(ballMove.x, ballMove.y, -ballMove.z);
-		b->SetMoveVec(ballMove);
 		b->SetPosition(XMFLOAT3(ballPos.x, ballPos.y, -tableHeight / 2 + ballRadius));
+		isHit = true;
 	}
 	else if ((tableHeight / 2) < ballPos.z + ballRadius)
 	{
 		ballMove = XMFLOAT3(ballMove.x, ballMove.y, -ballMove.z);
-		b->SetMoveVec(ballMove);
 		b->SetPosition(XMFLOAT3(ballPos.x, ballPos.y, tableHeight / 2 - ballRadius));
+		isHit = true;
+	}
+
+	// 接触による減退
+	if (isHit)
+	{
+		ballMove.x *= FRICTION_RATE;
+		ballMove.z *= FRICTION_RATE;
+
+		b->SetMoveVec(ballMove);
 	}
 }
 
@@ -137,9 +160,9 @@ void BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
 		ballMove.x -= dirNorVec.x * force;
 		ballMove.z -= dirNorVec.z * force;
 
-		// 減退
-		ballMove.x *= 0.9f;
-		ballMove.z *= 0.9f;
+		// 吸い込み減退
+		ballMove.x *= POCKETS_PULL_RATE;
+		ballMove.z *= POCKETS_PULL_RATE;
 
 		// 速度が一定未満になったらポケットされたとする
 		if (abs(ballMove.x) < POCKETS_DICISION_VEC && abs(ballMove.z) < POCKETS_DICISION_VEC)

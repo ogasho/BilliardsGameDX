@@ -14,6 +14,7 @@ static const int WINDOW_WIDTH = 800;
 static const int WINDOW_HEIGHT = 600;
 static const bool FULL_SCREEN = false;
 static const bool VSYNC_ENABLED = true;
+static const int VSYNC_FPS = 60;
 static const float SCREEN_DEPTH = 1000.0f;
 static const float SCREEN_NEAR = 0.1f;
 
@@ -32,10 +33,12 @@ private:
 	bool Frame();
 	void InitWindows(int* screenWidth, int* screenHeight);
 	void ShutdownWindows();
+	void SleepWindows();
 
 	LPCUWSTR m_appTitle;
 	HINSTANCE m_hInstance;
 	HWND m_hWnd;
+	DWORD m_currentTime;
 
 	InputManager* m_inputManager;
 	DX11Manager* m_dx3D;

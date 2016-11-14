@@ -6,6 +6,9 @@
 #include "SceneManager.h"
 #include "DX11Manager.h"
 
+#pragma comment(lib, "winmm.lib")
+#include <mmsystem.h>
+
 const SceneID START_SCENE = SceneID::G_NineBall;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -21,7 +24,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_CLOSE:
 			PostQuitMessage(0);
 			return 0;
-
+			
 		// その他メッセージはSystemクラスのWndProc関数へ
 		default:
 			return ApplicationHandle->WndProc(hWnd, msg, wParam, lParam);
@@ -92,6 +95,9 @@ bool System::Init()
 	result = m_sceneManager->Init(START_SCENE, m_dx3D, m_hWnd, m_inputManager);
 	if (!result) return false;
 
+	// 同期タイマー初期化
+	m_currentTime = timeGetTime();
+
 	return true;
 }
 
@@ -125,6 +131,8 @@ void System::Run()
 				done = true;
 			}
 		}
+
+		SleepWindows();
 	}
 }
 
@@ -257,4 +265,15 @@ void System::InitWindows(int* screenWidth, int* screenHeight)
 
 	// マウスカーソルを非表示にする
 	//ShowCursor(false);
+}
+
+void System::SleepWindows()
+{
+	// 更新が早い場合、指定のfps値になるまで休む
+	while (timeGetTime() - m_currentTime < 1000 / VSYNC_FPS)
+	{
+		Sleep(1);
+	}
+
+	m_currentTime = timeGetTime();
 }

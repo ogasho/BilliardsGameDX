@@ -23,11 +23,16 @@ bool ObjMesh::LoadOBJFile(const char *filename)
 	if (file.fail()) return false;
 
 	char buffer[1024] = {};
+	char input;
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
 	std::vector<XMFLOAT2> texcoords;
 	std::vector<ObjVertex> vertices;
-	char input;
+	// 事前確保
+	positions.reserve(256);
+	normals.reserve(256);
+	texcoords.reserve(256);
+	vertices.reserve(512);
 
 	// objファイル解析
 	file.get(input);
@@ -103,10 +108,10 @@ bool ObjMesh::LoadOBJFile(const char *filename)
 	}
 
 	// 破棄
-	positions.clear();
-	normals.clear();
-	texcoords.clear();
-	vertices.clear();
+	std::vector<XMFLOAT3>().swap(positions);
+	std::vector<XMFLOAT3>().swap(normals);
+	std::vector<XMFLOAT2>().swap(texcoords);
+	std::vector<ObjVertex>().swap(vertices);
 
 	return true;
 }
