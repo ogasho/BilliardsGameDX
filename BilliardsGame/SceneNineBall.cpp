@@ -10,6 +10,8 @@
 #include "ObjMesh.h"
 #include "Table.h"
 
+#include "ImageUI.h"
+
 const bool DEBUG_FRAME = false;
 const UseKeys DEBUG_FRAME_UPDATE_KEY = UseKeys::Enter;
 const char DEBUG_FRAME_PLAY_KEY = 'U';
@@ -42,6 +44,8 @@ SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager
 	m_physics = nullptr;
 	m_table = nullptr;
 
+	m_testUI = nullptr;
+
 	m_playState = PlayState::Control;
 }
 
@@ -52,6 +56,8 @@ SceneNineBall::~SceneNineBall()
 	SafeDelete(m_light);
 	SafeDelete(m_physics);
 	SafeDelete(m_table);
+
+	SafeDelete(m_testUI);
 
 	for (int i = 0; i < NUM_BALL; i++)
 	{
@@ -97,6 +103,13 @@ bool SceneNineBall::Init()
 	// プレイヤー初期化
 	m_player = new Player;
 	m_player->Init(m_dx3D);
+
+	// UI初期化
+	m_testUI = new ImageUI;
+	XMINT2 screenSize = m_dx3D->GetScreenSize();
+	result = m_testUI->Init(m_dx3D->GetDevice(), m_dx3D->GetDeviceContext(),
+		screenSize.x, screenSize.y, 100, 100, "data/b1.tga");
+	if (!result) return false;
 
 	return true;
 }
@@ -205,14 +218,19 @@ SceneID SceneNineBall::UpdateShot()
 bool SceneNineBall::Render()
 {
 	XMFLOAT4X4 viewMatrix, projectionMatrix;
+	XMFLOAT4X4 screenViewMatrix, orthoMatrix, screenWorldMatrix;
 	bool result;
 
 	// カメラ
 	m_camera->Render();
 
-	// ビュー、射影行列取得
+	// ビュー行列、射影行列を取得
 	m_camera->GetViewMatrix(&viewMatrix);
 	m_dx3D->GetProjectionMatrix(&projectionMatrix);
+	// UI描画用の正射影、汎用ワールド、ビュー行列を取得
+	m_dx3D->GetOrthoMatrix(&orthoMatrix);
+	m_dx3D->GetWorldMatrix(&screenWorldMatrix);
+	m_dx3D->GetScreenViewMatrix(&screenViewMatrix);
 
 	// ボール描画
 	for (int i = 0; i < NUM_BALL; i++)
@@ -232,6 +250,17 @@ bool SceneNineBall::Render()
 	{
 		m_player->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}
+
+	// UI描画 (テスト)
+	m_dx3D->TurnOffZBuffer();
+	result = m_testUI->Render(m_dx3D->GetDeviceContext(), 300, 300);
+	if (!result) return false;
+
+	result = m_shaderManager->RenderTextureShader(m_dx3D->GetDeviceContext(),
+		m_testUI->GetIndexCount(), screenWorldMatrix, screenViewMatrix, orthoMatrix, m_testUI->GetTexture());
+	if (!result) return false;
+	m_dx3D->TurnOnZBuffer();
+
 	
 	return true;
 }

@@ -11,6 +11,8 @@ class BilliardPhysics;
 class Player;
 class Table;
 
+class ImageUI;
+
 enum class PlayState;
 
 class SceneNineBall : public SceneBase
@@ -34,5 +36,7 @@ private:
 	Light* m_light;
 	BilliardPhysics* m_physics;
 	Table* m_table;
+
+	ImageUI* m_testUI;
 };
 

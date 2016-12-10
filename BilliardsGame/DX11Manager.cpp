@@ -9,6 +9,7 @@ DX11Manager::DX11Manager()
 	m_renderTargetView = nullptr;
 	m_depthStencilBuffer = nullptr;
 	m_depthStencilState = nullptr;
+	m_disabledDepthStencilState = nullptr;
 	m_depthStencilView = nullptr;
 	m_rasterState = nullptr;
 
@@ -28,6 +29,7 @@ DX11Manager::~DX11Manager()
 	SafeRelease(m_renderTargetView);
 	SafeRelease(m_depthStencilBuffer);
 	SafeRelease(m_depthStencilState);
+	SafeRelease(m_disabledDepthStencilState);
 	SafeRelease(m_depthStencilView);
 	SafeRelease(m_rasterState);
 	
@@ -61,6 +63,20 @@ void DX11Manager::End()
 	}
 }
 
+void DX11Manager::TurnOnZBuffer()
+{
+	// 深度有効化
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+	return;
+}
+
+void DX11Manager::TurnOffZBuffer()
+{
+	// 深度無効化
+	m_deviceContext->OMSetDepthStencilState(m_disabledDepthStencilState, 1);
+	return;
+}
+
 void DX11Manager::GetVideoCardInfo(char* cardName, int* memory)
 {
 	strcpy_s(cardName, 128, m_videoCardDescription);
@@ -71,6 +87,9 @@ void DX11Manager::GetVideoCardInfo(char* cardName, int* memory)
 bool DX11Manager::Init(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
 	bool fullscreen, float screenDepth, float screenNear)
 {
+	m_screenSize.x = screenWidth;
+	m_screenSize.y = screenHeight;
+
 	// ビデオカード情報の初期化
 	if (InitVideoCardInfo(screenWidth, screenHeight) == false)
 	{
@@ -275,7 +294,7 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	result = m_device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer);
 	if FAILED(result) return false;
 
-	// ステンシル設定
+	// 深度ステンシル設定
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
 
@@ -319,6 +338,32 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	// 二つのビューをレンダリング出力にバインド
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
+	// 2D描画用の深度ステンシル無効の設定
+	D3D11_DEPTH_STENCIL_DESC disabledDepthStencilDesc;
+	ZeroMemory(&disabledDepthStencilDesc, sizeof(disabledDepthStencilDesc));
+
+	disabledDepthStencilDesc.DepthEnable = false; // 深度無効
+	disabledDepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	disabledDepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	disabledDepthStencilDesc.StencilEnable = false; // ステンシル無効
+	disabledDepthStencilDesc.StencilReadMask = 0xFF;
+	disabledDepthStencilDesc.StencilWriteMask = 0xFF;
+
+	disabledDepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	disabledDepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	disabledDepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	disabledDepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// 深度ステンシル無効設定作成
+	result = m_device->CreateDepthStencilState(&disabledDepthStencilDesc, &m_disabledDepthStencilState);
+	if FAILED(result) return false;
+
 	// ラスタライザ設定
 	D3D11_RASTERIZER_DESC rasterDesc;
 	rasterDesc.AntialiasedLineEnable = false;
@@ -356,12 +401,23 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	fieldOfView = 3.141592654f / 3.0f; // 60'
 	screenAspect = (float)screenWidth / (float)screenHeight;
 
-	// 3D描画用の射影変換行列作成
+	// 射影変換行列作成
 	XMMATRIX projMat = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixTranspose(projMat));
 
+	// 2D描画用の汎用ワールド行列設定
+	XMStoreFloat4x4(&m_worldMatrix, XMMatrixTranspose(XMMatrixIdentity()));
+
+	// 2D描画用の汎用ビュー行列設定 (座標0, 0, -1, 角度0, 0, 0のビュー)
+	m_screenViewMatrix._11 = 1.0f;
+	m_screenViewMatrix._22 = 1.0f;
+	m_screenViewMatrix._33 = 1.0f;
+	m_screenViewMatrix._34 = 1.0f;
+	m_screenViewMatrix._44 = 1.0f;
+
 	// 2D描画用の平行射影設定
 	XMMATRIX orthoMat = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
+
 	XMStoreFloat4x4(&m_orthoMatrix, XMMatrixTranspose(orthoMat));
 
 	return true;
