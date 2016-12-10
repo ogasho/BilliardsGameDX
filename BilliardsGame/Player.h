@@ -7,7 +7,7 @@ class Ball;
 class InputManager;
 class Model;
 class DX11Manager;
-class TextureShader;
+class ShaderManager;
 class Light;
 
 #include <DirectXMath.h>
@@ -23,7 +23,7 @@ public:
 
 	void UpdateInput(const InputManager* input);
 	void ShotBall(Ball* b);
-	bool Render(DX11Manager* dx3D, TextureShader* textureShader,
+	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light, const Ball* ball);
 
 	void ResetDecideShot(){ m_isDecideShot = false; }

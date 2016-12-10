@@ -2,10 +2,10 @@
 #include "DXUtil.h"
 
 #include "DX11Manager.h"
+#include "ShaderManager.h"
 #include "Model.h"
 #include "Light.h"
 #include "ObjMesh.h"
-#include "TextureShader.h"
 
 const float POCKETS_RADIUS = 3.5f;
 const XMFLOAT3 POCKETS_SCALE = { POCKETS_RADIUS, 1, POCKETS_RADIUS }; // ポケットスケール
@@ -68,7 +68,7 @@ bool Table::Init(DX11Manager* dx3D, float tableWidth, float tableHeight)
 	return true;
 }
 
-bool Table::Render(DX11Manager* dx3D, TextureShader* textureShader,
+bool Table::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light)
 {
 	bool result;
@@ -79,7 +79,7 @@ bool Table::Render(DX11Manager* dx3D, TextureShader* textureShader,
 	m_tableModel->Render(dx3D->GetDeviceContext());
 	m_tableModel->GetWorldMatrix(&worldMatrix);
 
-	result = textureShader->Render(dx3D->GetDeviceContext(), m_tableModel->GetIndexCount(),
+	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_tableModel->GetIndexCount(),
 		worldMatrix, view, projection, m_tableModel->GetTexture(),
 		light->GetDirection(), light->GetDiffuseColor());
 	if (!result) return false;
@@ -91,7 +91,7 @@ bool Table::Render(DX11Manager* dx3D, TextureShader* textureShader,
 		m_pocketModel->UpdateWorldMatrix(m_pocketPositions[i], XMFLOAT3(0,0,0), POCKETS_SCALE);
 		m_pocketModel->GetWorldMatrix(&worldMatrix);
 
-		result = textureShader->Render(dx3D->GetDeviceContext(), m_pocketModel->GetIndexCount(),
+		result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_pocketModel->GetIndexCount(),
 			worldMatrix, view, projection, m_pocketModel->GetTexture(),
 			light->GetDirection(), light->GetDiffuseColor());
 		if (!result) return false;

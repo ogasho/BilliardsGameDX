@@ -7,24 +7,26 @@
 #include "SceneID.h"
 #include "DX11Manager.h"
 #include "InputManager.h"
+#include "ShaderManager.h"
 
 class SceneBase
 {
 public:
-	SceneBase(DX11Manager* dx3D, const InputManager* inputManager)
+	SceneBase(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
 	{
 		m_dx3D = dx3D; 
 		m_inputManager = inputManager; 
-		return;
+		m_shaderManager = shaderManager;
 	}
 	virtual ~SceneBase(){}
 
-	virtual bool Init(HWND hWnd) = 0;
+	virtual bool Init() = 0;
 	virtual SceneID Frame() = 0;
 	virtual bool Render() = 0;
 
 protected:
 	const InputManager* m_inputManager;
+	const ShaderManager* m_shaderManager;
 	DX11Manager* m_dx3D;
 };
 

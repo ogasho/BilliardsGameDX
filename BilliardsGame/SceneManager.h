@@ -7,6 +7,7 @@
 
 enum class SceneID;
 class DX11Manager;
+class ShaderManager;
 class SceneBase;
 class SceneNineBall;
 class InputManager;
@@ -17,8 +18,8 @@ public:
 	SceneManager();
 	~SceneManager();
 
-	bool Init(SceneID firstScene, DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager);
-	bool UpdateChangeScene(DX11Manager* dx3D, HWND hWnd, const InputManager* inputManager);
+	bool Init(SceneID firstScene, DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager);
+	bool UpdateChangeScene(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager);
 
 	bool Frame();
 	bool Render(DX11Manager* dx3D);

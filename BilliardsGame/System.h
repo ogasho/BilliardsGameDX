@@ -9,6 +9,7 @@
 class SceneManager;
 class InputManager;
 class DX11Manager;
+class ShaderManager;
 
 static const int WINDOW_WIDTH = 800;
 static const int WINDOW_HEIGHT = 600;
@@ -43,6 +44,7 @@ private:
 	InputManager* m_inputManager;
 	DX11Manager* m_dx3D;
 	SceneManager* m_sceneManager;
+	ShaderManager* m_shaderManager;
 };
 
 // ウィンドウプロシージャ

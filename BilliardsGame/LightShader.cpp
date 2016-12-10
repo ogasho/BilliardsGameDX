@@ -1,45 +1,48 @@
-#include "TextureShader.h"
+#include "LightShader.h"
 #include "DXUtil.h"
 
-TextureShader::TextureShader()
+LightShader::LightShader()
 {
 	m_vertexShader = nullptr;
 	m_pixelShader = nullptr;
 	m_layout = nullptr;
 	m_matrixBuffer = nullptr;
+	m_lightBuffer = nullptr;
 	m_sampleState = nullptr;
 }
 
 
-TextureShader::~TextureShader()
+LightShader::~LightShader()
 {
 	// シェーダ関連の開放
 	SafeRelease(m_vertexShader);
 	SafeRelease(m_pixelShader);
 	SafeRelease(m_layout);
 	SafeRelease(m_matrixBuffer);
+	SafeRelease(m_lightBuffer);
 	SafeRelease(m_sampleState);
 }
 
-bool TextureShader::Init(ID3D11Device* device, HWND hWnd)
+bool LightShader::Init(ID3D11Device* device, HWND hWnd)
 {
 	bool result;
 
 	// シェーダファイルのパスを指定、初期化
-	result = InitShader(device, hWnd, "data/TextureShader_v.cso", "data/TextureShader_p.cso");
+	result = InitShader(device, hWnd, "data/LightShader_v.cso", "data/LightShader_p.cso");
 	if (!result) return false;
 	
 	return true;
 }
 
-bool TextureShader::Render(ID3D11DeviceContext* deviceContext, int indexCount,
+bool LightShader::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
-	ID3D11ShaderResourceView* tex) const
+	ID3D11ShaderResourceView* tex, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor) const
 {
 	bool result;
 	
 	// シェーダのパラメータを設定
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, tex);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, 
+		tex, lightDirection, diffuseColor);
 	if (!result) return false;
 
 	// 描画
@@ -48,7 +51,7 @@ bool TextureShader::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 	return true;
 }
 
-bool TextureShader::InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName, char* psFileName)
+bool LightShader::InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName, char* psFileName)
 {
 	HRESULT result;
 	
@@ -75,7 +78,8 @@ bool TextureShader::InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA , 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	unsigned int numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
@@ -118,10 +122,22 @@ bool TextureShader::InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName
 	result = device->CreateBuffer(&matrixBufferDesc, nullptr, &m_matrixBuffer);
 	if FAILED(result) return false;
 
+	// (定数)ライトバッファ設定
+	D3D11_BUFFER_DESC lightBufferDesc;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&lightBufferDesc, nullptr, &m_lightBuffer);
+	if FAILED(result) return false;
+	
 	return true;
 }
 
-HRESULT TextureShader::LoadShaderBinary(char* filename, std::vector<char>* binaryData)
+HRESULT LightShader::LoadShaderBinary(char* filename, std::vector<char>* binaryData)
 {
 	FILE* filePtr;
 	long size;
@@ -143,9 +159,9 @@ HRESULT TextureShader::LoadShaderBinary(char* filename, std::vector<char>* binar
 	return S_OK;
 }
 
-bool TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
+bool LightShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
-	ID3D11ShaderResourceView* tex) const
+	ID3D11ShaderResourceView* tex, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor) const
 {
 	HRESULT result;
 
@@ -169,14 +185,31 @@ bool TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->VSSetConstantBuffers(0, 1, &m_matrixBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &tex);
 
+	// ↓ライトバッファ書き込み
+	result = deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if FAILED(result) return false;
+
+	// 頂点情報をコピー
+	LightBufferType* lightPtr;
+	lightPtr = (LightBufferType*)mappedResource.pData;
+	lightPtr->diffuseColor = diffuseColor;
+	lightPtr->lightDirection = lightDirection;
+	lightPtr->padding = 0.0f;
+
+	// ↑ライトバッファ書き込み解除
+	deviceContext->Unmap(m_lightBuffer, 0);
+
+	// シェーダへ値を受け渡す
+	deviceContext->PSSetConstantBuffers(0, 1, &m_lightBuffer);
+	
 	return true;
 }
 
-void TextureShader::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount) const
+void LightShader::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount) const
 {
 	// レイアウト設定
 	deviceContext->IASetInputLayout(m_layout);
-
+	
 	// シェーダ設定
 	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
 	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);

@@ -2,7 +2,7 @@
 #include "DXUtil.h"
 
 #include "Camera.h"
-#include "TextureShader.h"
+#include "LightShader.h"
 #include "Light.h"
 #include "Ball.h"
 #include "BilliardPhysics.h"
@@ -34,13 +34,12 @@ enum class PlayState
 	Shot		// ボールを打っている
 };
 
-SceneRotation::SceneRotation(DX11Manager* dx3D, const InputManager* inputManager)
-	:SceneBase(dx3D, inputManager)
+SceneRotation::SceneRotation(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
+	:SceneBase(dx3D, inputManager, shaderManager)
 {
 	m_camera = nullptr;
 	m_balls = nullptr;
 	m_player = nullptr;
-	m_textureShader = nullptr;
 	m_light = nullptr;
 	m_physics = nullptr;
 	m_table = nullptr;
@@ -52,7 +51,6 @@ SceneRotation::~SceneRotation()
 {
 	SafeDelete(m_camera);
 	SafeDelete(m_player);
-	SafeDelete(m_textureShader);
 	SafeDelete(m_light);
 	SafeDelete(m_physics);
 	SafeDelete(m_table);
@@ -64,7 +62,7 @@ SceneRotation::~SceneRotation()
 	SafeDeleteArr(m_balls);
 }
 
-bool SceneRotation::Init(HWND hWnd)
+bool SceneRotation::Init()
 {
 	bool result;
 
@@ -88,11 +86,6 @@ bool SceneRotation::Init(HWND hWnd)
 
 	// ボールのモデルデータ破棄
 	SafeDelete(objMesh);
-
-	// テクスチャシェーダ初期化
-	m_textureShader = new TextureShader;
-	result = m_textureShader->Init(m_dx3D->GetDevice(), hWnd);
-	if (!result) return false;
 
 	// ライト初期化
 	m_light = new Light;
@@ -229,17 +222,17 @@ bool SceneRotation::Render()
 		if (m_balls[i]->IsPockets() && m_balls[i]->IsStopBallMove())
 			continue;
 
-		result = m_balls[i]->Render(m_dx3D, m_textureShader, viewMatrix, projectionMatrix, m_light);
+		result = m_balls[i]->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light);
 		if (!result) return false;
 	}
 
 	// テーブル描画
-	m_table->Render(m_dx3D, m_textureShader, viewMatrix, projectionMatrix, m_light);
+	m_table->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light);
 
 	// プレイヤー(打つ方向)描画
 	if (m_playState == PlayState::Control)
 	{
-		m_player->Render(m_dx3D, m_textureShader, viewMatrix, projectionMatrix, m_light, m_balls[0]);
+		m_player->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}
 
 	return true;

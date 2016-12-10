@@ -6,7 +6,7 @@
 class DX11Manager;
 class Model;
 class ObjMesh;
-class TextureShader;
+class ShaderManager;
 class Light;
 
 #include <d3d11.h>
@@ -20,7 +20,7 @@ public:
 	~Ball();
 
 	bool Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjMesh* ballMesh);
-	bool Render(DX11Manager* dx3D, TextureShader* textureShader,
+	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light);
 	bool UpdateMove();
 	bool UpdatePocket();

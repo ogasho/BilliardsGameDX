@@ -5,9 +5,9 @@
 #include "Ball.h"
 #include "Model.h"
 #include "DX11Manager.h"
+#include "ShaderManager.h"
 #include "Texture.h"
 #include "Light.h"
-#include "TextureShader.h"
 
 #include <string>
 
@@ -101,7 +101,7 @@ void Player::ShotBall(Ball* b)
 	b->SetMoveVec(XMFLOAT3(xPower, 0.0f, zPower));
 }
 
-bool Player::Render(DX11Manager* dx3D, TextureShader* textureShader,
+bool Player::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light, const Ball* ball)
 {
 	// ‘Å‚Â•ûŒü/‹­‚³‚ÌƒKƒCƒh‚ð•`‰æ
@@ -119,7 +119,7 @@ bool Player::Render(DX11Manager* dx3D, TextureShader* textureShader,
 
 	m_guideModel->Render(dx3D->GetDeviceContext());
 
-	result = textureShader->Render(dx3D->GetDeviceContext(), m_guideModel->GetIndexCount(),
+	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_guideModel->GetIndexCount(),
 		worldMatrix, view, projection, m_guideModel->GetTexture(),
 		light->GetDirection(), light->GetDiffuseColor());
 

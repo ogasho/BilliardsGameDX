@@ -2,8 +2,8 @@
 #include "DXUtil.h"
 
 #include "DX11Manager.h"
+#include "ShaderManager.h"
 #include "Model.h"
-#include "TextureShader.h"
 #include "Light.h"
 
 #include <random>
@@ -61,7 +61,7 @@ bool Ball::Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjM
 	return true;
 }
 
-bool Ball::Render(DX11Manager* dx3D, TextureShader* textureShader,
+bool Ball::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light)
 {
 	bool result;
@@ -71,7 +71,7 @@ bool Ball::Render(DX11Manager* dx3D, TextureShader* textureShader,
 
 	m_model->Render(dx3D->GetDeviceContext());
 
-	result = textureShader->Render(dx3D->GetDeviceContext(), m_model->GetIndexCount(),
+	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_model->GetIndexCount(),
 		worldMatrix, view, projection, m_model->GetTexture(),
 		light->GetDirection(), light->GetDiffuseColor());
 

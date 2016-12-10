@@ -5,6 +5,7 @@
 #include "InputManager.h"
 #include "SceneManager.h"
 #include "DX11Manager.h"
+#include "ShaderManager.h"
 
 #pragma comment(lib, "winmm.lib")
 #include <mmsystem.h>
@@ -37,6 +38,7 @@ System::System()
 	m_inputManager = nullptr;
 	m_dx3D = nullptr;
 	m_sceneManager = nullptr;
+	m_shaderManager = nullptr;
 }
 
 System::~System()
@@ -44,6 +46,7 @@ System::~System()
 	SafeDelete(m_inputManager);
 	SafeDelete(m_dx3D);
 	SafeDelete(m_sceneManager);
+	SafeDelete(m_shaderManager);
 
 	ShutdownWindows();
 }
@@ -86,13 +89,18 @@ bool System::Init()
 		FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
 	if (!result) return false;
 
+	// シェーダーマネージャ初期化
+	m_shaderManager = new ShaderManager;
+	result = m_shaderManager->Init(m_dx3D->GetDevice(), m_hWnd);
+	if (!result) return false;
+
 	// 入力クラス作成
 	m_inputManager = new InputManager;
 	m_inputManager->Init();
 	
 	// シーンマネージャ初期化
 	m_sceneManager = new SceneManager;
-	result = m_sceneManager->Init(START_SCENE, m_dx3D, m_hWnd, m_inputManager);
+	result = m_sceneManager->Init(START_SCENE, m_dx3D, m_inputManager, m_shaderManager);
 	if (!result) return false;
 
 	// 同期タイマー初期化
@@ -157,7 +165,7 @@ bool System::Frame()
 	// シーンのフラグが変わっていたらシーンを切り替える
 	if (m_sceneManager->IsChangeScene())
 	{
-		m_sceneManager->UpdateChangeScene(m_dx3D, m_hWnd, m_inputManager);
+		m_sceneManager->UpdateChangeScene(m_dx3D, m_inputManager, m_shaderManager);
 	}
 
 	// 入力情報更新

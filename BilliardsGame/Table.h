@@ -7,7 +7,7 @@
 using namespace DirectX;
 
 class DX11Manager;
-class TextureShader;
+class ShaderManager;
 class Light;
 class Model;
 
@@ -20,7 +20,7 @@ public:
 	~Table();
 
 	bool Init(DX11Manager* dx3D, float tableWidth, float tableHeight);
-	bool Render(DX11Manager* dx3D, TextureShader* textureShader,
+	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light);
 	
 	float GetTableWidth()const{ return m_tableWidth; }
