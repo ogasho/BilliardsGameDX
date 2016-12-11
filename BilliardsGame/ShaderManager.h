@@ -25,6 +25,9 @@ public:
 	bool RenderTextureShader(ID3D11DeviceContext* deviceContext, int indexCount,
 		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
 		ID3D11ShaderResourceView* tex, const XMFLOAT4& blendColor) const;
+	bool RenderTextureShader(ID3D11DeviceContext* deviceContext, int indexCount,
+		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
+		ID3D11ShaderResourceView* tex) const;
 
 private:
 	LightShader* m_lightShader;

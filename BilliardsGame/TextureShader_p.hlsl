@@ -16,10 +16,10 @@ struct PS_IN
 
 float4 TexturePixelShader(PS_IN input) : SV_TARGET
 {
-	float4 textureColor;
-	
-	textureColor = shaderTexture.Sample(SampleType, input.tex);
-	textureColor = textureColor * blendColor;
+	float4 color;
 
-	return textureColor;
+	color = shaderTexture.Sample(SampleType, input.tex);
+	color = color * blendColor;
+
+	return color;
 }

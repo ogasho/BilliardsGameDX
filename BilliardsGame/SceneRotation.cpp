@@ -144,7 +144,7 @@ SceneID SceneRotation::Frame()
 		result = SceneID::Reset;
 	// Eキーが押されたらモードを変える
 	if (m_inputManager->IsFrameKeyDown('E'))
-		result = SceneID::G_Rotation;
+		result = SceneID::G_NineBall;
 
 	return result;
 }

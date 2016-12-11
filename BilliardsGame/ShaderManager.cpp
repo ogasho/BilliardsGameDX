@@ -55,3 +55,16 @@ bool ShaderManager::RenderTextureShader(ID3D11DeviceContext* deviceContext, int 
 
 	return result;
 }
+
+bool ShaderManager::RenderTextureShader(ID3D11DeviceContext* deviceContext, int indexCount,
+	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
+	ID3D11ShaderResourceView* tex) const
+{
+	bool result = true;
+
+	XMFLOAT4 color = XMFLOAT4(1, 1, 1, 1);
+
+	result = m_textureShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, tex, color);
+
+	return result;
+}

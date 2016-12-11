@@ -12,6 +12,8 @@ class Player;
 class Table;
 class FrameCount;
 
+class ImageUI;
+
 enum class PlayState;
 enum class CameraMotion;
 
@@ -42,5 +44,7 @@ private:
 	Light* m_light;
 	BilliardPhysics* m_physics;
 	Table* m_table;
+
+	ImageUI* m_testUI;
 };
 

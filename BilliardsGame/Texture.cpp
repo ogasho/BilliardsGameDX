@@ -88,11 +88,11 @@ bool Texture::LoadTarga(const char* filename, int* width, int* height)
 	if (count != 1) return false;
 
 	// 画像情報を記録
-	*width = (int)targaHeader.width;
-	*height = (int)targaHeader.height;
+	*height = (int)targaHeader.width;
+	*width = (int)targaHeader.height;
 	int bpp = (int)targaHeader.bpp;
 
-	// 画像データは32bitか32bitであるか
+	// 画像データは32bitか24bitであるか
 	if (bpp != 32 && bpp != 24) return false;
 
 	int bppByte = bpp / 8;
@@ -117,8 +117,7 @@ bool Texture::LoadTarga(const char* filename, int* width, int* height)
 
 	// 画像データをコピー
 	int index = 0;
-	int k = 0; // 上から下へ色データを読み込んでいく
-	// 下から上へ読み込むならこれ: k = imageSize - ((*width) * bppByte);
+	int k = imageSize - ((*width) * bppByte); // 下から上へ色データを読み込んでいく
 	for (int i = 0; i < (*height); i++)
 	{
 		for (int j = 0; j < (*width); j++)
@@ -135,7 +134,7 @@ bool Texture::LoadTarga(const char* filename, int* width, int* height)
 			index += 4;
 		}
 
-		//k -= (*width) * (bppByte * 2); // 下から上へ読み込むならこのコメント外す
+		k -= (*width) * (bppByte * 2);
 	}
 
 	// 開放

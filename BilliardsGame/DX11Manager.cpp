@@ -8,11 +8,12 @@ DX11Manager::DX11Manager()
 	m_deviceContext = nullptr;
 	m_renderTargetView = nullptr;
 	m_depthStencilBuffer = nullptr;
-	m_depthStencilState = nullptr;
-	m_disabledDepthStencilState = nullptr;
+	m_depthEnableStencilState = nullptr;
+	m_depthDisableStencilState = nullptr;
 	m_depthStencilView = nullptr;
 	m_rasterState = nullptr;
-
+	m_alphaEnableBlendingState = nullptr;
+	m_alphaDisableBlendingState = nullptr;
 }
 
 DX11Manager::~DX11Manager()
@@ -28,11 +29,12 @@ DX11Manager::~DX11Manager()
 	SafeRelease(m_deviceContext);
 	SafeRelease(m_renderTargetView);
 	SafeRelease(m_depthStencilBuffer);
-	SafeRelease(m_depthStencilState);
-	SafeRelease(m_disabledDepthStencilState);
+	SafeRelease(m_depthEnableStencilState);
+	SafeRelease(m_depthDisableStencilState);
 	SafeRelease(m_depthStencilView);
 	SafeRelease(m_rasterState);
-	
+	SafeRelease(m_alphaEnableBlendingState);
+	SafeRelease(m_alphaDisableBlendingState);
 }
 
 void DX11Manager::Begin(float r, float g, float b, float a)
@@ -63,18 +65,16 @@ void DX11Manager::End()
 	}
 }
 
-void DX11Manager::TurnOnZBuffer()
+void DX11Manager::SpriteBegin()
 {
-	// 深度有効化
-	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
-	return;
+	TurnOffZBuffer();
+	TurnOnAlphaBlend();
 }
 
-void DX11Manager::TurnOffZBuffer()
+void DX11Manager::SpriteEnd()
 {
-	// 深度無効化
-	m_deviceContext->OMSetDepthStencilState(m_disabledDepthStencilState, 1);
-	return;
+	TurnOnZBuffer();
+	TurnOffAlphaBlend();
 }
 
 void DX11Manager::GetVideoCardInfo(char* cardName, int* memory)
@@ -301,30 +301,18 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
 
-	depthStencilDesc.DepthEnable = true;
-	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	// 深度ステンシル(有効)設定作成
+	GetDepthStencilState(&depthStencilDesc, true, false);
+	result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthEnableStencilState);
+	if FAILED(result) return false;
 
-	depthStencilDesc.StencilEnable = false; // ステンシル無効
-	depthStencilDesc.StencilReadMask = 0xFF;
-	depthStencilDesc.StencilWriteMask = 0xFF;
-
-	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	// 深度ステンシル設定作成
-	result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState);
+	// 深度ステンシル(深度無効)設定作成
+	GetDepthStencilState(&depthStencilDesc, false, false);
+	result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthDisableStencilState);
 	if FAILED(result) return false;
 
 	// 深度ステンシル設定を適用
-	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+	m_deviceContext->OMSetDepthStencilState(m_depthEnableStencilState, 1);
 
 	// 深度ステンシルビュー設定
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
@@ -341,30 +329,18 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	// 二つのビューをレンダリング出力にバインド
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
-	// 2D描画用の深度ステンシル無効の設定
-	D3D11_DEPTH_STENCIL_DESC disabledDepthStencilDesc;
-	ZeroMemory(&disabledDepthStencilDesc, sizeof(disabledDepthStencilDesc));
+	// ブレンドステート設定
+	D3D11_BLEND_DESC blendStateDesc;
+	ZeroMemory(&blendStateDesc, sizeof(blendStateDesc));
 
-	disabledDepthStencilDesc.DepthEnable = false; // 深度無効
-	disabledDepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	disabledDepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	// ブレンドステート(有効)作成
+	GetBlendState(&blendStateDesc, true);
+	result = m_device->CreateBlendState(&blendStateDesc, &m_alphaEnableBlendingState);
+	if FAILED(result) return false;
 
-	disabledDepthStencilDesc.StencilEnable = false; // ステンシル無効
-	disabledDepthStencilDesc.StencilReadMask = 0xFF;
-	disabledDepthStencilDesc.StencilWriteMask = 0xFF;
-
-	disabledDepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-	disabledDepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	disabledDepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-	disabledDepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	// 深度ステンシル無効設定作成
-	result = m_device->CreateDepthStencilState(&disabledDepthStencilDesc, &m_disabledDepthStencilState);
+	// ブレンドステート(無効)作成
+	GetBlendState(&blendStateDesc, false);
+	result = m_device->CreateBlendState(&blendStateDesc, &m_alphaDisableBlendingState);
 	if FAILED(result) return false;
 
 	// ラスタライザ設定
@@ -424,4 +400,67 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 	XMStoreFloat4x4(&m_orthoMatrix, XMMatrixTranspose(orthoMat));
 
 	return true;
+}
+
+void DX11Manager::GetDepthStencilState(D3D11_DEPTH_STENCIL_DESC* depthStencilDesc, bool depthEnable, bool stencilEnable)
+{
+	depthStencilDesc->DepthEnable = depthEnable;
+	depthStencilDesc->DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc->DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthStencilDesc->StencilEnable = stencilEnable;
+	depthStencilDesc->StencilReadMask = 0xFF;
+	depthStencilDesc->StencilWriteMask = 0xFF;
+
+	depthStencilDesc->FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc->FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthStencilDesc->FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc->FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	depthStencilDesc->BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc->BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc->BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc->BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+}
+
+void DX11Manager::GetBlendState(D3D11_BLEND_DESC* blendStateDesc, bool blendEnable)
+{
+	blendStateDesc->RenderTarget[0].BlendEnable = blendEnable;
+	blendStateDesc->RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDesc->RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDesc->RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDesc->RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDesc->RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDesc->RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDesc->RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+}
+
+void DX11Manager::TurnOnZBuffer()
+{
+	// 深度有効化
+	m_deviceContext->OMSetDepthStencilState(m_depthEnableStencilState, 1);
+	return;
+}
+
+void DX11Manager::TurnOffZBuffer()
+{
+	// 深度無効化
+	m_deviceContext->OMSetDepthStencilState(m_depthDisableStencilState, 1);
+	return;
+}
+
+void DX11Manager::TurnOnAlphaBlend()
+{
+	// アルファブレンド有効化
+	float blendFactor[4]{0.0f, 0.0f, 0.0f, 0.0f};
+
+	m_deviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
+}
+
+void DX11Manager::TurnOffAlphaBlend()
+{
+	// アルファブレンド無効化
+	float blendFactor[4]{0.0f, 0.0f, 0.0f, 0.0f};
+
+	m_deviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
 }

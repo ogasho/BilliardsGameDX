@@ -11,6 +11,8 @@
 #include "Table.h"
 #include "FrameCount.h"
 
+#include "ImageUI.h"
+
 const bool DEBUG_FRAME = false;
 const UseKeys DEBUG_FRAME_UPDATE_KEY = UseKeys::Enter;
 const char DEBUG_FRAME_PLAY_KEY = 'U';
@@ -48,6 +50,8 @@ SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager
 
 	m_playState = PlayState::Control;
 	m_oldPlayState = m_playState;
+
+	m_testUI = nullptr;
 }
 
 SceneNineBall::~SceneNineBall()
@@ -64,6 +68,8 @@ SceneNineBall::~SceneNineBall()
 		SafeDelete(m_balls[i]);
 	}
 	SafeDeleteArr(m_balls);
+
+	SafeDelete(m_testUI);
 }
 
 bool SceneNineBall::Init()
@@ -107,6 +113,10 @@ bool SceneNineBall::Init()
 
 	// ƒJƒEƒ“ƒg‰Šú‰»
 	m_frameCount = new FrameCount;
+
+	m_testUI = new ImageUI;
+	m_testUI->Init(m_dx3D->GetDevice(), m_dx3D->GetDeviceContext(), m_dx3D->GetScreenSize().x, m_dx3D->GetScreenSize().y,
+		200, 100, "data/turn1p.tga");
 
 	return true;
 }
@@ -321,6 +331,13 @@ bool SceneNineBall::Render()
 	{
 		m_player->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}
+
 	
+	m_dx3D->SpriteBegin();
+	m_testUI->Render(m_dx3D->GetDeviceContext(), 0, 0);
+	m_shaderManager->RenderTextureShader(m_dx3D->GetDeviceContext(), m_testUI->GetIndexCount(),
+		screenWorldMatrix, screenViewMatrix, orthoMatrix, m_testUI->GetTexture());
+	m_dx3D->SpriteEnd();
+
 	return true;
 }

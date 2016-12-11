@@ -20,8 +20,8 @@ public:
 	void Begin(float r, float g, float b, float a);
 	void End();
 
-	void TurnOnZBuffer();
-	void TurnOffZBuffer();
+	void SpriteBegin();
+	void SpriteEnd();
 
 	ID3D11Device* GetDevice()const{ return m_device; }
 	ID3D11DeviceContext* GetDeviceContext()const{ return m_deviceContext; }
@@ -41,6 +41,13 @@ private:
 	bool InitDirectX(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
 		bool fullscreen, float screenDepth, float screenNear);
 
+	void TurnOnZBuffer();
+	void TurnOffZBuffer();
+	void TurnOnAlphaBlend();
+	void TurnOffAlphaBlend();
+	void GetDepthStencilState(D3D11_DEPTH_STENCIL_DESC* depthStencilDesc, bool depthEnable, bool stencilEnable);
+	void GetBlendState(D3D11_BLEND_DESC* blendStateDesc, bool blendEnable);
+
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
 	char m_videoCardDescription[128];
@@ -52,10 +59,12 @@ private:
 	D3D_DRIVER_TYPE	m_driverType;
 	ID3D11RenderTargetView* m_renderTargetView;
 	ID3D11Texture2D* m_depthStencilBuffer;
-	ID3D11DepthStencilState* m_depthStencilState;
-	ID3D11DepthStencilState* m_disabledDepthStencilState;
+	ID3D11DepthStencilState* m_depthEnableStencilState;
+	ID3D11DepthStencilState* m_depthDisableStencilState;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11RasterizerState* m_rasterState;
+	ID3D11BlendState* m_alphaEnableBlendingState;
+	ID3D11BlendState* m_alphaDisableBlendingState;
 
 	XMINT2 m_screenSize;
 	float m_screenDepth, m_screenNear;
