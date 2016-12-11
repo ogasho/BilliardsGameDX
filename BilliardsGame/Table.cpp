@@ -56,7 +56,7 @@ bool Table::Init(DX11Manager* dx3D, float tableWidth, float tableHeight)
 	// ポケット位置設定
 	m_pocketRadius = POCKETS_RADIUS;
 	float offsetX = m_tableWidth / 2 + POCKETS_OFFSET;
-	float offsetY = 0.05f;
+	float offsetY = 0.1f;
 	float offsetZ = m_tableHeight / 2 + POCKETS_OFFSET;
 	m_pocketPositions[0] = XMFLOAT3(-offsetX, offsetY, offsetZ); // 左上
 	m_pocketPositions[1] = XMFLOAT3(0, offsetY, offsetZ); // 上

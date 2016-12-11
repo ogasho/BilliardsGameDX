@@ -3,6 +3,11 @@
 Texture2D shaderTexture;
 SamplerState SampleType;
 
+cbuffer TextureShader
+{
+	float4 blendColor;
+};
+
 struct PS_IN
 {
 	float4 position : SV_POSITION;
@@ -14,6 +19,7 @@ float4 TexturePixelShader(PS_IN input) : SV_TARGET
 	float4 textureColor;
 	
 	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	textureColor = textureColor * blendColor;
 
 	return textureColor;
 }

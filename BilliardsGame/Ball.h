@@ -38,7 +38,9 @@ public:
 
 	float GetRadius()const{ return m_radius; }
 	void GetPosition(XMFLOAT3* pos)const{ *pos = m_position; }
+	XMFLOAT3 GetPosition()const{ return m_position; }
 	void GetMoveVec(XMFLOAT3* move)const{ *move = m_move; }
+	XMFLOAT3 GetMoveVec()const{ return m_move; }
 	bool IsStopBallMove()const{ return m_isStop; }
 	bool IsPockets()const{ return m_isPocket; }
 

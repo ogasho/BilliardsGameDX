@@ -77,6 +77,8 @@ unsigned int InputManager::TransUseKeys(UseKeys key)const
 		return VK_RIGHT;
 	case UseKeys::Enter:
 		return VK_RETURN;
+	case UseKeys::Space:
+		return VK_SPACE;
 	}
 
 	return 0;

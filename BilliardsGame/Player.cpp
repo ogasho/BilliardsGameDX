@@ -12,7 +12,7 @@
 #include <string>
 
 #define MAX_SHOT_POWER 5.5f
-#define SPEED_ROTATE_DIR 2.0f
+#define SPEED_ROTATE_DIR 1.0f
 #define SPEED_CHANGE_POW 0.1f
 
 
@@ -39,6 +39,16 @@ bool Player::Init(DX11Manager* dx3D)
 		"data/triangle.obj", "data/red.tga");
 
 	return result;
+}
+
+void Player::InitShotState(const XMFLOAT3& myBall, const XMFLOAT3& targetBall)
+{
+	// Ž©“®‚ÅŽŸ‚É‘Å‚Â‚×‚«‹…‚Ì•ûŒü‚ÉŒü‚­
+	float dirRad = atan2(targetBall.z - myBall.z, targetBall.x - myBall.x);
+	m_shotDirection = XMConvertToDegrees(dirRad);
+
+	// ‹­‚³‰Šú‰»
+	m_shotPower = 2.0f;
 }
 
 void Player::UpdateInput(const InputManager* input)
@@ -112,7 +122,7 @@ bool Player::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
 	ball->GetPosition(&ballPos); // À•W‚Í”’‹…‚ÌˆÊ’u
 
 	float modelRadian = XMConvertToRadians(-m_shotDirection);// Šp“x‚Í‘Å‚ÂŠp“x
-	float modelScale = (m_shotPower / MAX_SHOT_POWER) * 15.0f + 1.0f; // ‘å‚«‚³‚Í‘Å‚Â‹­‚³
+	float modelScale = (m_shotPower / MAX_SHOT_POWER) * 25.0f + 5.0f; // ‘å‚«‚³‚Í‘Å‚Â‹­‚³
 
 	m_guideModel->UpdateWorldMatrix(ballPos, XMFLOAT3(0, modelRadian, 0), XMFLOAT3(modelScale, 1, 2));
 	m_guideModel->GetWorldMatrix(&worldMatrix);

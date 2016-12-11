@@ -1,7 +1,7 @@
 #include "SceneRotation.h"
 #include "DXUtil.h"
 
-#include "Camera.h"
+#include "MainCameraMotion.h"
 #include "LightShader.h"
 #include "Light.h"
 #include "Ball.h"
@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "ObjMesh.h"
 #include "Table.h"
+#include "FrameCount.h"
 
 const bool DEBUG_FRAME = false;
 const UseKeys DEBUG_FRAME_UPDATE_KEY = UseKeys::Enter;
@@ -37,23 +38,28 @@ enum class PlayState
 SceneRotation::SceneRotation(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
 	:SceneBase(dx3D, inputManager, shaderManager)
 {
-	m_camera = nullptr;
+	m_cameraMotion = nullptr;
 	m_balls = nullptr;
 	m_player = nullptr;
 	m_light = nullptr;
 	m_physics = nullptr;
 	m_table = nullptr;
+	m_frameCount = nullptr;
+
+	m_isStateChangeFrame = true;
 
 	m_playState = PlayState::Control;
+	m_oldPlayState = m_playState;
 }
 
 SceneRotation::~SceneRotation()
 {
-	SafeDelete(m_camera);
+	SafeDelete(m_cameraMotion);
 	SafeDelete(m_player);
 	SafeDelete(m_light);
 	SafeDelete(m_physics);
 	SafeDelete(m_table);
+	SafeDelete(m_frameCount);
 
 	for (int i = 0; i < NUM_BALL; i++)
 	{
@@ -67,9 +73,10 @@ bool SceneRotation::Init()
 	bool result;
 
 	// カメラ初期化
-	m_camera = new Camera;
-	m_camera->SetPosition(0.0f, TABLE_WIDTH*0.75f, -TABLE_WIDTH*0.25f);
-	m_camera->SetRotation(75.0f, 0.0f, 0.0f);
+	m_cameraMotion = new MainCameraMotion;
+	m_cameraMotion->Init(m_dx3D, TABLE_WIDTH, TABLE_HEIGHT);
+	m_cameraMotion->SetBirdeyeCamera();
+	m_motion = CameraMotion::Birdeye;
 
 	// ボールのモデルデータ読み込み
 	ObjMesh* objMesh = new ObjMesh;
@@ -100,12 +107,22 @@ bool SceneRotation::Init()
 	m_player = new Player;
 	m_player->Init(m_dx3D);
 
+	// カウント初期化
+	m_frameCount = new FrameCount;
+
 	return true;
 }
 
 SceneID SceneRotation::Frame()
 {
 	SceneID result = SceneID::Keep;
+
+	// シーン状態が変わったらフラグをオン
+	if (m_playState != m_oldPlayState)
+		m_isStateChangeFrame = true;
+	else
+		m_isStateChangeFrame = false;
+	m_oldPlayState = m_playState;
 
 	switch (m_playState)
 	{
@@ -119,18 +136,28 @@ SceneID SceneRotation::Frame()
 		break;
 	}
 
+	// カメラ更新
+	UpdateCamera();
+
 	// Rキーが押されたらリセットする
 	if (m_inputManager->IsFrameKeyDown('R'))
 		result = SceneID::Reset;
 	// Eキーが押されたらモードを変える
 	if (m_inputManager->IsFrameKeyDown('E'))
-		result = SceneID::G_NineBall;
+		result = SceneID::G_Rotation;
 
 	return result;
 }
 
 SceneID SceneRotation::UpdateControl()
 {
+	// 初期化
+	if (m_isStateChangeFrame)
+	{
+		m_player->InitShotState(m_balls[0]->GetPosition(), m_balls[1]->GetPosition());
+		m_motion = CameraMotion::Birdeye;
+	}
+
 	m_player->UpdateInput(m_inputManager);
 
 	// 白球が死んでいたら復活(場所指定実装は後で)
@@ -147,11 +174,25 @@ SceneID SceneRotation::UpdateControl()
 	}
 
 	return SceneID::Keep;
-
 }
 
 SceneID SceneRotation::UpdateShot()
 {
+	// 初期化
+	if (m_isStateChangeFrame)
+	{
+		m_frameCount->Reset();
+		m_motion = CameraMotion::Firstperson;
+	}
+
+	// 少し経ってからショット
+	if (m_frameCount->GetCountFrame() < 30)
+	{
+		m_frameCount->CountingFrame();
+		return SceneID::Keep;
+	}
+	m_motion = CameraMotion::ShotMove;
+
 	// コマ送りデバッグ
 	if (DEBUG_FRAME)
 	{
@@ -204,17 +245,65 @@ SceneID SceneRotation::UpdateShot()
 	return SceneID::Keep;
 }
 
+void SceneRotation::UpdateCamera()
+{
+	if (m_playState == PlayState::Control)
+	{
+		// スペースが押されたら切り替え
+		if (m_inputManager->IsFrameKeyDown(UseKeys::Space))
+		{
+			if (m_motion < CameraMotion::Firstperson)
+			{
+				m_motion = (CameraMotion)((int)m_motion + 1);
+			}
+			else
+			{
+				m_motion = CameraMotion::Birdeye;
+			}
+		}
+	}
+
+	switch (m_motion)
+	{
+	case CameraMotion::Birdeye:
+		m_cameraMotion->SetBirdeyeCamera();
+		break;
+	case CameraMotion::Lookdown:
+		m_cameraMotion->SetLookdownCamera();
+		break;
+	case CameraMotion::Firstperson:
+		m_cameraMotion->SetFirstpersonCamera(m_balls[0]->GetPosition(), m_player->GetShotDir());
+		break;
+	case CameraMotion::ShotMove:
+		m_cameraMotion->SetShotMoveCamera(m_player->GetShotDir());
+		break;
+	}
+}
+
 bool SceneRotation::Render()
 {
 	XMFLOAT4X4 viewMatrix, projectionMatrix;
+	XMFLOAT4X4 screenViewMatrix, orthoMatrix, screenWorldMatrix;
 	bool result;
 
 	// カメラ
-	m_camera->Render();
+	m_cameraMotion->Render();
 
-	// ビュー、射影行列取得
-	m_camera->GetViewMatrix(&viewMatrix);
-	m_dx3D->GetProjectionMatrix(&projectionMatrix);
+	// ビュー行列、射影行列を取得
+	m_cameraMotion->GetViewMatrix(&viewMatrix);
+	if (m_cameraMotion->IsOrthoMode())
+	{
+		m_cameraMotion->GetOrthoMatrix(&projectionMatrix);
+	}
+	else
+	{
+		m_dx3D->GetProjectionMatrix(&projectionMatrix);
+	}
+
+	// UI描画用の正射影、汎用ワールド、ビュー行列を取得
+	m_dx3D->GetOrthoMatrix(&orthoMatrix);
+	m_dx3D->GetWorldMatrix(&screenWorldMatrix);
+	m_dx3D->GetScreenViewMatrix(&screenViewMatrix);
 
 	// ボール描画
 	for (int i = 0; i < NUM_BALL; i++)
@@ -230,7 +319,7 @@ bool SceneRotation::Render()
 	m_table->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light);
 
 	// プレイヤー(打つ方向)描画
-	if (m_playState == PlayState::Control)
+	if (m_oldPlayState == PlayState::Control)
 	{
 		m_player->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}

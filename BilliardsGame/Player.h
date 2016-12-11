@@ -21,6 +21,7 @@ public:
 
 	bool Init(DX11Manager* dx3D);
 
+	void InitShotState(const XMFLOAT3& myBall, const XMFLOAT3& targetBall);
 	void UpdateInput(const InputManager* input);
 	void ShotBall(Ball* b);
 	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
@@ -28,6 +29,7 @@ public:
 
 	void ResetDecideShot(){ m_isDecideShot = false; }
 	bool IsDecideShot()const{ return m_isDecideShot; }
+	float GetShotDir()const{ return m_shotDirection; }
 
 private:
 	float m_shotPower;

@@ -1,8 +1,5 @@
 #include "BilliardPhysics.h"
 
-#include <DirectXMath.h>
-using namespace DirectX;
-
 #include "Ball.h"
 #include "Table.h"
 
@@ -20,6 +17,7 @@ BilliardPhysics::BilliardPhysics()
 
 BilliardPhysics::~BilliardPhysics()
 {
+
 }
 
 void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
@@ -33,20 +31,12 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	b1->GetPosition(&b1Pos);
 	b2->GetPosition(&b2Pos);
 
-	// まず矩形範囲で当たり判定
-	if (abs(b1Pos.x - b2Pos.x) > b1Rad + b2Rad)
-		return;
-	if (abs(b1Pos.z - b2Pos.z) > b1Rad + b2Rad)
-		return;
-
-	// 距離で当たり判定 二乗比較
+	float distance;
+	
+	// 当たり判定
 	XMFLOAT3 dirVec(b1Pos.x - b2Pos.x, 0.0f, b1Pos.z - b2Pos.z);
-	float distance = dirVec.x * dirVec.x + dirVec.z * dirVec.z;
-	if (distance > (b1Rad + b2Rad) * (b1Rad + b2Rad))
+	if (!IsHit(dirVec, XMFLOAT3(0, 0, 0), b1Rad, b2Rad, &distance))
 		return;
-
-	// ルート化
-	distance = sqrt(distance);
 
 	XMFLOAT3 b1Move, b2Move;
 	b1->GetMoveVec(&b1Move);
@@ -139,16 +129,10 @@ void BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
 	{
 		table->GetTablePocketsPos(&pocketPos, i);
 
-		// 矩形範囲で当たり判定
-		if (abs(ballPos.x - pocketPos.x) > pocketRad)
-			continue;
-		if (abs(ballPos.z - pocketPos.z) > pocketRad)
-			continue;
-
-		// 距離で当たり判定
+		// 当たり判定
 		XMFLOAT3 dirVec(ballPos.x - pocketPos.x, 0.0f, ballPos.z - pocketPos.z);
-		float distance = sqrt(dirVec.x * dirVec.x + dirVec.z * dirVec.z);
-		if (distance > pocketRad)
+		float distance;
+		if (!IsHit(dirVec, XMFLOAT3(0,0,0), pocketRad, 0, &distance))
 			continue;
 
 		// (ここまでクリアしたらつまり、ボールの中心点がポケットに含まれている)
@@ -184,6 +168,26 @@ void BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
 		ballPos.y = ballRad * 0.25f;
 	else
 		ballPos.y = ballRad;
-
+	
 	b->SetPosition(ballPos);
+}
+
+bool BilliardPhysics::IsHit(const XMFLOAT3& pos1, const XMFLOAT3& pos2, float p1rad, float p2rad, float* getDistance)
+{
+	// 矩形判定
+	if (abs(pos1.x - pos2.x) > p1rad + p2rad)
+		return false;
+	if (abs(pos1.z - pos2.z) > p1rad + p2rad)
+		return false;
+
+	// 円判定
+	XMFLOAT3 dirVec(pos1.x - pos2.x, 0.0f, pos1.z - pos2.z);
+	float distance = dirVec.x * dirVec.x + dirVec.z * dirVec.z;
+	if (distance > (p1rad + p2rad) * (p1rad + p2rad))
+		return false;
+
+	// 距離を渡しておく
+	*getDistance = sqrt(distance);
+
+	return true;
 }

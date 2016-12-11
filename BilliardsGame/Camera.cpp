@@ -20,11 +20,21 @@ void Camera::SetPosition(float x, float y, float z)
 	m_pos.z = z;
 }
 
+void Camera::SetPosition(XMFLOAT3 position)
+{
+	m_pos = position;
+}
+
 void Camera::SetRotation(float x, float y, float z)
 {
 	m_rot.x = x;
 	m_rot.y = y;
 	m_rot.z = z;
+}
+
+void Camera::SetRotation(XMFLOAT3 rotation)
+{
+	m_rot = rotation;
 }
 
 void Camera::Render()

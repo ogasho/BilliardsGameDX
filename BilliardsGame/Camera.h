@@ -15,7 +15,9 @@ public:
 	void Render();
 
 	void SetPosition(float x, float y, float z);
+	void SetPosition(XMFLOAT3 position);
 	void SetRotation(float x, float y, float z);
+	void SetRotation(XMFLOAT3 rotation);
 
 	XMFLOAT3 GetPosition()const{ return m_pos; }
 	XMFLOAT3 GetRotation()const{ return m_rot; }

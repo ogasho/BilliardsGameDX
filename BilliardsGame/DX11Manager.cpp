@@ -90,6 +90,9 @@ bool DX11Manager::Init(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
 	m_screenSize.x = screenWidth;
 	m_screenSize.y = screenHeight;
 
+	m_screenDepth = screenDepth;
+	m_screenNear = screenNear;
+
 	// ビデオカード情報の初期化
 	if (InitVideoCardInfo(screenWidth, screenHeight) == false)
 	{
@@ -398,7 +401,7 @@ bool DX11Manager::InitDirectX(int screenWidth, int screenHeight, bool vsync, HWN
 
 	// 射影設定
 	float fieldOfView, screenAspect;
-	fieldOfView = 3.141592654f / 3.0f; // 60'
+	fieldOfView = 3.141592654f / 4.0f; // 45'
 	screenAspect = (float)screenWidth / (float)screenHeight;
 
 	// 射影変換行列作成

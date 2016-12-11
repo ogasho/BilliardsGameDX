@@ -31,6 +31,8 @@ public:
 	void GetWorldMatrix(XMFLOAT4X4* worldMatrix)const{ *worldMatrix = m_worldMatrix; }
 	void GetOrthoMatrix(XMFLOAT4X4* orthoMatrix)const{ *orthoMatrix = m_orthoMatrix; }
 	void GetScreenViewMatrix(XMFLOAT4X4* screenViewMatrix)const{ *screenViewMatrix = m_screenViewMatrix; }
+	float GetScreenDepth()const{ return m_screenDepth; }
+	float GetScreenNear()const{ return m_screenNear; }
 
 	void GetVideoCardInfo(char* cardName, int* memory);
 
@@ -56,6 +58,7 @@ private:
 	ID3D11RasterizerState* m_rasterState;
 
 	XMINT2 m_screenSize;
+	float m_screenDepth, m_screenNear;
 	XMFLOAT4X4 m_projectionMatrix;
 	XMFLOAT4X4 m_worldMatrix;
 	XMFLOAT4X4 m_orthoMatrix;

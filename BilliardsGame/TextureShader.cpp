@@ -7,6 +7,7 @@ TextureShader::TextureShader()
 	m_pixelShader = nullptr;
 	m_layout = nullptr;
 	m_matrixBuffer = nullptr;
+	m_blendBuffer = nullptr;
 	m_sampleState = nullptr;
 }
 
@@ -18,6 +19,7 @@ TextureShader::~TextureShader()
 	SafeRelease(m_pixelShader);
 	SafeRelease(m_layout);
 	SafeRelease(m_matrixBuffer);
+	SafeRelease(m_blendBuffer);
 	SafeRelease(m_sampleState);
 }
 
@@ -34,12 +36,12 @@ bool TextureShader::Init(ID3D11Device* device, HWND hWnd)
 
 bool TextureShader::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
-	ID3D11ShaderResourceView* tex) const
+	ID3D11ShaderResourceView* tex, const XMFLOAT4& blendColor) const
 {
 	bool result;
 	
 	// シェーダのパラメータを設定
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, tex);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, tex, blendColor);
 	if (!result) return false;
 
 	// 描画
@@ -118,6 +120,18 @@ bool TextureShader::InitShader(ID3D11Device* device, HWND hWnd, char* vsFileName
 	result = device->CreateBuffer(&matrixBufferDesc, nullptr, &m_matrixBuffer);
 	if FAILED(result) return false;
 
+	// (定数)ブレンドカラーバッファ設定
+	D3D11_BUFFER_DESC lightBufferDesc;
+	lightBufferDesc.ByteWidth = sizeof(BlendBufferType);
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&lightBufferDesc, nullptr, &m_blendBuffer);
+	if FAILED(result) return false;
+
 	return true;
 }
 
@@ -145,7 +159,7 @@ HRESULT TextureShader::LoadShaderBinary(char* filename, std::vector<char>* binar
 
 bool TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
-	ID3D11ShaderResourceView* tex) const
+	ID3D11ShaderResourceView* tex, const XMFLOAT4& blendColor) const
 {
 	HRESULT result;
 
@@ -168,6 +182,21 @@ bool TextureShader::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	// シェーダへ値を受け渡す
 	deviceContext->VSSetConstantBuffers(0, 1, &m_matrixBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &tex);
+
+	// ↓ブレンドカラーバッファ書き込み
+	result = deviceContext->Map(m_blendBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if FAILED(result) return false;
+
+	// 頂点情報をコピー
+	BlendBufferType* blendPtr;
+	blendPtr = (BlendBufferType*)mappedResource.pData;
+	blendPtr->color = blendColor;
+
+	// ↑ライトバッファ書き込み解除
+	deviceContext->Unmap(m_blendBuffer, 0);
+
+	// シェーダへ値を受け渡す
+	deviceContext->PSSetConstantBuffers(0, 1, &m_blendBuffer);
 
 	return true;
 }

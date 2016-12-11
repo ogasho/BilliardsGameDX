@@ -11,6 +11,7 @@ enum class UseKeys
 	Left,
 	Right,
 	Enter,
+	Space,
 };
 
 class InputManager

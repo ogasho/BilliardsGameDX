@@ -4,16 +4,16 @@
 #pragma once
 #include "SceneBase.h"
 
-class Camera;
+class MainCameraMotion;
 class Light;
 class Ball;
 class BilliardPhysics;
 class Player;
 class Table;
-
-class ImageUI;
+class FrameCount;
 
 enum class PlayState;
+enum class CameraMotion;
 
 class SceneNineBall : public SceneBase
 {
@@ -28,15 +28,19 @@ public:
 private:
 	SceneID UpdateControl();
 	SceneID UpdateShot();
+	void UpdateCamera();
 
+	bool m_isStateChangeFrame;
 	PlayState m_playState;
-	Camera* m_camera;
+	PlayState m_oldPlayState;
+	FrameCount* m_frameCount;
+
+	MainCameraMotion* m_cameraMotion;
+	CameraMotion m_motion;
 	Ball** m_balls;
 	Player* m_player;
 	Light* m_light;
 	BilliardPhysics* m_physics;
 	Table* m_table;
-
-	ImageUI* m_testUI;
 };
 
