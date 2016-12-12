@@ -209,7 +209,7 @@ SceneID SceneRotation::UpdateShot()
 
 		for (int j = i + 1; j < NUM_BALL; j++)
 		{
-			m_physics->UpdateHitBallAndBall(m_balls[i], m_balls[j]);
+			m_physics->UpdateHitBallAndBall(m_balls[i], m_balls[j], true);
 		}
 
 		m_physics->UpdateHitBallAndTable(m_balls[i], m_table->GetTableWidth(), m_table->GetTableHeight());

@@ -22,11 +22,12 @@ public:
 	ImageUI();
 	~ImageUI();
 
-	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int screenWidth, int screenHeight,
+	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMINT2 screenSize,
 		int imageWidth, int imageHeight, const char* texFilename);
 	bool Render(ID3D11DeviceContext* deviceContext, int posX, int posY);
 
 	int GetIndexCount()const{ return m_indexCount; }
+	XMINT2 GetImageSize()const{ return m_imageSize; }
 	ID3D11ShaderResourceView* GetTexture();
 
 private:

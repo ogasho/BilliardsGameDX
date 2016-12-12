@@ -19,14 +19,13 @@ ImageUI::~ImageUI()
 
 }
 
-bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int screenWidth, int screenHeight,
+bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMINT2 screenSize,
 	int imageWidth, int imageHeight, const char* texFilename)
 {
 	bool result;
 
 	// スクリーンサイズ
-	m_screenSize.x = screenWidth;
-	m_screenSize.y = screenHeight;
+	m_screenSize = screenSize;
 
 	// 画像サイズ
 	m_imageSize.x = imageWidth;
@@ -41,8 +40,11 @@ bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int
 	if (!result) return false;
 
 	// 画像をロード
-	result = LoadTexture(device, deviceContext, texFilename);
-	if (!result) return false;
+	if (texFilename != nullptr)
+	{
+		result = LoadTexture(device, deviceContext, texFilename);
+		if (!result) return false;
+	}
 
 	return true;
 }

@@ -109,6 +109,9 @@ bool Ball::UpdateMove()
 
 bool Ball::UpdatePocket()
 {
+	if (m_isStop)
+		return true;
+
 	// —Ž‰º
 	m_move.y = (m_move.y - 0.01f) * 1.01f;
 
@@ -129,6 +132,10 @@ void Ball::Restore(const XMFLOAT3& pos)
 	m_position.x = pos.x;
 	m_position.y = m_radius;
 	m_position.z = pos.z;
+
+	m_move.x = 0;
+	m_move.y = 0;
+	m_move.z = 0;
 
 	// •œŠˆ
 	m_isPocket = false;

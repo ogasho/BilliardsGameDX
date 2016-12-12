@@ -35,6 +35,7 @@ public:
 	void GetViewMatrix(XMFLOAT4X4 *viewMatrix)const;
 	void GetOrthoMatrix(XMFLOAT4X4 *orthoMatrix)const{ *orthoMatrix = m_orthoMatrix; }
 	bool IsOrthoMode()const{ return m_isOrtho; }
+	bool IsFlipPos()const{ return m_isFlipPos; }
 
 private:
 	void GetInitPos(XMFLOAT3* pos);

@@ -20,10 +20,10 @@ BilliardPhysics::~BilliardPhysics()
 
 }
 
-void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
+bool BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2, bool transmission)
 {
 	if (b1->IsPockets() || b2->IsPockets())
-		return;
+		return false;
 
 	float b1Rad = b1->GetRadius();
 	float b2Rad = b2->GetRadius();
@@ -32,15 +32,22 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	b2->GetPosition(&b2Pos);
 
 	float distance;
-	
+
 	// 当たり判定
 	XMFLOAT3 dirVec(b1Pos.x - b2Pos.x, 0.0f, b1Pos.z - b2Pos.z);
 	if (!IsHit(dirVec, XMFLOAT3(0, 0, 0), b1Rad, b2Rad, &distance))
-		return;
+		return false;
 
 	XMFLOAT3 b1Move, b2Move;
 	b1->GetMoveVec(&b1Move);
 	b2->GetMoveVec(&b2Move);
+
+	// 完全に同じ座標にいた場合は、ほんの少しだけずらす
+	if (distance == 0.0f)
+	{
+		distance = 0.01f;
+		dirVec.x = 0.01f;
+	}
 
 	// 接触方向の単位ベクトル
 	XMFLOAT3 dirNorVec(dirVec.x / distance, 0.0f, dirVec.z / distance);
@@ -48,8 +55,8 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	// めり込んでいる分だけ現在の移動ベクトルに反発が加わる
 	float rebound = (b1Rad + b2Rad) - distance;
 	b1Move.x += dirNorVec.x * rebound;
-	b2Move.x -= dirNorVec.x * rebound;
 	b1Move.z += dirNorVec.z * rebound;
+	b2Move.x -= dirNorVec.x * rebound;
 	b2Move.z -= dirNorVec.z * rebound;
 
 	// 接触による減退
@@ -59,7 +66,12 @@ void BilliardPhysics::UpdateHitBallAndBall(Ball* b1, Ball* b2)
 	b2Move.z *= FRICTION_RATE;
 
 	b1->SetMoveVec(b1Move);
-	b2->SetMoveVec(b2Move);
+	if (transmission)
+	{
+		b2->SetMoveVec(b2Move);
+	}
+
+	return true;
 }
 
 void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tableHeight)
@@ -115,8 +127,11 @@ void BilliardPhysics::UpdateHitBallAndTable(Ball* b, float tableWidth, float tab
 	}
 }
 
-void BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
+bool BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
 {
+	if (b->IsPockets())
+		return false;
+
 	float pocketRad = table->GetPocketRadius();
 	XMFLOAT3 ballPos;
 	b->GetPosition(&ballPos);
@@ -170,6 +185,8 @@ void BilliardPhysics::UpdateHitBallAndPockets(Ball* b, const Table* table)
 		ballPos.y = ballRad;
 	
 	b->SetPosition(ballPos);
+
+	return b->IsPockets();
 }
 
 bool BilliardPhysics::IsHit(const XMFLOAT3& pos1, const XMFLOAT3& pos2, float p1rad, float p2rad, float* getDistance)

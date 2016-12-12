@@ -80,6 +80,8 @@
   <ItemGroup>
     <ClCompile Include="Ball.cpp" />
     <ClCompile Include="BilliardPhysics.cpp" />
+    <ClCompile Include="BilliardPocketAnim.cpp" />
+    <ClCompile Include="BilliardUI.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DX11Manager.cpp" />
     <ClCompile Include="FrameCount.cpp" />
@@ -89,6 +91,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainCameraMotion.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="NineBallRule.cpp" />
     <ClCompile Include="ObjMesh.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SceneManager.cpp" />
@@ -104,12 +107,15 @@
   <ItemGroup>
     <ClInclude Include="Ball.h" />
     <ClInclude Include="BilliardPhysics.h" />
+    <ClInclude Include="BilliardPocketAnim.h" />
+    <ClInclude Include="BilliardUI.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DX11Manager.h" />
     <ClInclude Include="DXUtil.h" />
     <ClInclude Include="FrameCount.h" />
     <ClInclude Include="ImageUI.h" />
     <ClInclude Include="MainCameraMotion.h" />
+    <ClInclude Include="NineBallRule.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="InputManager.h" />

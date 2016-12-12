@@ -101,7 +101,7 @@ bool SceneManager::Render(DX11Manager* dx3D)
 	bool result;
 
 	// 画面クリア
-	dx3D->Begin(0.5f, 0.5f, 0.5f, 1.0f);
+	dx3D->Begin(0.5f, 0.6f, 0.5f, 1.0f);
 
 	// シーン描画
 	result = m_currentScene->Render();

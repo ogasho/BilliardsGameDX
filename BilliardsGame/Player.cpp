@@ -14,13 +14,13 @@
 #define MAX_SHOT_POWER 5.5f
 #define SPEED_ROTATE_DIR 1.0f
 #define SPEED_CHANGE_POW 0.1f
-
+#define SPEED_MOVE_BALL 1.0f;
 
 Player::Player()
 {
 	m_shotDirection = 0;
 	m_shotPower = 2.0f;
-	m_isDecideShot = false;
+	m_isDecide = false;
 
 	m_guideModel = nullptr;
 }
@@ -80,8 +80,8 @@ void Player::UpdateInput(const InputManager* input)
 	}
 
 	// 決定
-	if (input->IsKeyDown(UseKeys::Enter))
-		m_isDecideShot = true;
+	if (input->IsFrameKeyDown(UseKeys::Enter))
+		m_isDecide = true;
 
 	// 値補正
 	if (m_shotPower < 0.5f)
@@ -99,6 +99,102 @@ void Player::UpdateInput(const InputManager* input)
 	{
 		MyOutputDebugString(L"\n pow=%f, dir=%f\n", m_shotPower, m_shotDirection);
 	}
+}
+
+bool Player::UpdateFreeDrop(const InputManager* input, Ball* b, bool cameraFlip, bool isFirstperson)
+{
+	//ボールを移動させる
+	bool moving = false;
+
+	// カメラモードが一人称かどうかで挙動を変える
+	if (isFirstperson)
+	{
+		moving = InputFreeDropFirstperson(input, b);
+	}
+	else
+	{
+		moving = InputFreeDropBirdeye(input, b, cameraFlip);
+	}
+
+	// 決定
+	if (!moving && input->IsFrameKeyDown(UseKeys::Enter))
+		m_isDecide = true;
+
+	return moving;
+}
+
+bool Player::InputFreeDropBirdeye(const InputManager* input, Ball* b, bool cameraFlip)
+{
+	bool moving = false;
+
+	// 俯瞰視点でのボール移動処理
+	XMFLOAT3 ballVec(0, 0, 0);
+	float flip = 1.0f;
+	if (cameraFlip)
+		flip = -1.0f;
+
+	if (input->IsKeyDown(UseKeys::Left))
+	{
+		ballVec.x -= flip * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	else if (input->IsKeyDown(UseKeys::Right))
+	{
+		ballVec.x += flip * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	if (input->IsKeyDown(UseKeys::Up))
+	{
+		ballVec.z += flip * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	else if (input->IsKeyDown(UseKeys::Down))
+	{
+		ballVec.z -= flip * SPEED_MOVE_BALL;
+		moving = true;
+	}
+
+	b->SetMoveVec(ballVec);
+
+	return moving;
+}
+
+bool Player::InputFreeDropFirstperson(const InputManager* input, Ball* b)
+{
+	bool moving = false;
+	// 一人称視点でのボール移動処理
+	XMFLOAT3 ballVec(0, 0, 0);
+	float dirRad = XMConvertToRadians(m_shotDirection);
+	float dirPerRad = XMConvertToRadians(m_shotDirection + 90.0f);
+
+	if (input->IsKeyDown(UseKeys::Left))
+	{
+		ballVec.x += cos(dirPerRad) * SPEED_MOVE_BALL;
+		ballVec.z += sin(dirPerRad) * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	else if (input->IsKeyDown(UseKeys::Right))
+	{
+		ballVec.x -= cos(dirPerRad) * SPEED_MOVE_BALL;
+		ballVec.z -= sin(dirPerRad) * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	if (input->IsKeyDown(UseKeys::Up))
+	{
+		ballVec.x += cos(dirRad) * SPEED_MOVE_BALL;
+		ballVec.z += sin(dirRad) * SPEED_MOVE_BALL;
+		moving = true;
+	}
+	else if (input->IsKeyDown(UseKeys::Down))
+	{
+		ballVec.x -= cos(dirRad) * SPEED_MOVE_BALL;
+		ballVec.z -= sin(dirRad) * SPEED_MOVE_BALL;
+		moving = true;
+	}
+
+	b->SetMoveVec(ballVec);
+
+	return moving;
 }
 
 void Player::ShotBall(Ball* b)

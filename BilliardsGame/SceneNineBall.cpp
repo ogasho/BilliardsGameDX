@@ -10,8 +10,9 @@
 #include "ObjMesh.h"
 #include "Table.h"
 #include "FrameCount.h"
-
-#include "ImageUI.h"
+#include "BilliardPocketAnim.h"
+#include "NineBallRule.h"
+#include "BilliardUI.h"
 
 const bool DEBUG_FRAME = false;
 const UseKeys DEBUG_FRAME_UPDATE_KEY = UseKeys::Enter;
@@ -31,8 +32,10 @@ const float TABLE_HEIGHT = 100.0f;
 
 enum class PlayState
 {
+	Foul,		// ファウル処理中
 	Control,	// 操作中
 	Shot,		// ボールを打っている
+	Finish		// 試合終了
 };
 
 SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
@@ -45,13 +48,14 @@ SceneNineBall::SceneNineBall(DX11Manager* dx3D, const InputManager* inputManager
 	m_physics = nullptr;
 	m_table = nullptr;
 	m_frameCount = nullptr;
+	m_rule = nullptr;
+	m_billiardUI = nullptr;
 
 	m_isStateChangeFrame = true;
 
 	m_playState = PlayState::Control;
 	m_oldPlayState = m_playState;
 
-	m_testUI = nullptr;
 }
 
 SceneNineBall::~SceneNineBall()
@@ -62,6 +66,8 @@ SceneNineBall::~SceneNineBall()
 	SafeDelete(m_physics);
 	SafeDelete(m_table);
 	SafeDelete(m_frameCount);
+	SafeDelete(m_rule);
+	SafeDelete(m_billiardUI);
 
 	for (int i = 0; i < NUM_BALL; i++)
 	{
@@ -69,7 +75,6 @@ SceneNineBall::~SceneNineBall()
 	}
 	SafeDeleteArr(m_balls);
 
-	SafeDelete(m_testUI);
 }
 
 bool SceneNineBall::Init()
@@ -114,9 +119,17 @@ bool SceneNineBall::Init()
 	// カウント初期化
 	m_frameCount = new FrameCount;
 
-	m_testUI = new ImageUI;
-	m_testUI->Init(m_dx3D->GetDevice(), m_dx3D->GetDeviceContext(), m_dx3D->GetScreenSize().x, m_dx3D->GetScreenSize().y,
-		200, 100, "data/turn1p.tga");
+	// ポケットアニメUI初期化
+	m_pocketAnim = new BilliardPocketAnim;
+	m_pocketAnim->Init(m_dx3D, NUM_BALL);
+
+	// 汎用UI初期化
+	m_billiardUI = new BilliardUI;
+	m_billiardUI->Init(m_dx3D, NUM_BALL);
+
+	// ルール初期化
+	m_rule = new NineBallRule;
+	m_rule->Init(NUM_BALL);
 
 	return true;
 }
@@ -134,11 +147,14 @@ SceneID SceneNineBall::Frame()
 
 	switch (m_playState)
 	{
+	case PlayState::Foul:
+		UpdateFoul();
+		break;
 	case PlayState::Control:
-		result = UpdateControl();
+		UpdateControl();
 		break;
 	case PlayState::Shot:
-		result = UpdateShot();
+		UpdateShot();
 		break;
 	default:
 		break;
@@ -157,22 +173,83 @@ SceneID SceneNineBall::Frame()
 	return result;
 }
 
-SceneID SceneNineBall::UpdateControl()
+void SceneNineBall::UpdateFoul()
 {
 	// 初期化
 	if (m_isStateChangeFrame)
 	{
-		m_player->InitShotState(m_balls[0]->GetPosition(), m_balls[1]->GetPosition());
 		m_motion = CameraMotion::Birdeye;
+
+		// 白球が死んでいたら復活
+		if (m_balls[0]->IsPockets())
+		{
+			m_balls[0]->Restore(XMFLOAT3(0, 0, 0));
+		}
+
+		// ナインボールが死んでいたら復活
+		if (m_balls[9]->IsPockets())
+		{
+			m_balls[9]->Restore(XMFLOAT3(TABLE_WIDTH * 0.25f, 0, 0));
+			m_rule->SetBallPocket(9, false);
+
+			// 既に置いてあるボールと反発させて自然な位置に配置させる
+			// (フットスポット周辺にボールがあった場合等の事故防止)
+			bool isHit;
+			do
+			{
+				isHit = false;
+				for (int i = 0; i < NUM_BALL - 1; i++)
+				{
+					isHit = m_physics->UpdateHitBallAndBall(m_balls[NUM_BALL - 1], m_balls[i], false);
+					if (isHit)
+					{
+						m_balls[9]->UpdateMove();
+						m_balls[9]->SetMoveVec(XMFLOAT3(0, 0, 0));
+					}
+				}
+			} while (isHit);
+		}
+	}
+
+	m_player->InitShotState(m_balls[0]->GetPosition(), m_balls[m_rule->GetNextBallNum()]->GetPosition());
+
+	// フリードロップ操作受け付け
+	m_player->UpdateFreeDrop(m_inputManager, m_balls[0],
+		m_cameraMotion->IsFlipPos(), m_motion == CameraMotion::Firstperson);
+
+	// 置き場所が決まったらコントロールへ
+	if (m_player->IsDecideShot())
+	{
+		m_player->ResetDecideShot();
+		m_playState = PlayState::Control;
+	}
+
+	// ボール物理更新
+	for (int i = 1; i < NUM_BALL; i++)
+	{
+		m_physics->UpdateHitBallAndBall(m_balls[0], m_balls[i], false);
+	}
+
+	m_physics->UpdateHitBallAndTable(m_balls[0], m_table->GetTableWidth(), m_table->GetTableHeight());
+
+	m_balls[0]->UpdateMove();
+
+}
+
+void SceneNineBall::UpdateControl()
+{
+	// 初期化
+	if (m_isStateChangeFrame)
+	{
+		m_rule->Refresh();
+
+		m_player->InitShotState(m_balls[0]->GetPosition(), m_balls[m_rule->GetNextBallNum()]->GetPosition());
+		if (m_motion == CameraMotion::ShotMove)
+			m_motion = CameraMotion::Birdeye;
+		m_pocketAnim->Clear();
 	}
 
 	m_player->UpdateInput(m_inputManager);
-
-	// 白球が死んでいたら復活(場所指定実装は後で)
-	if (m_balls[0]->IsPockets())
-	{
-		m_balls[0]->Restore(XMFLOAT3(0, 0, 0));
-	}
 
 	// 打つ方向が決まったら打つ
 	if (m_player->IsDecideShot())
@@ -181,10 +258,9 @@ SceneID SceneNineBall::UpdateControl()
 		m_playState = PlayState::Shot;
 	}
 
-	return SceneID::Keep;
 }
 
-SceneID SceneNineBall::UpdateShot()
+void SceneNineBall::UpdateShot()
 {
 	// 初期化
 	if (m_isStateChangeFrame)
@@ -197,7 +273,7 @@ SceneID SceneNineBall::UpdateShot()
 	if (m_frameCount->GetCountFrame() < 30)
 	{
 		m_frameCount->CountingFrame();
-		return SceneID::Keep;
+		return;
 	}
 	m_motion = CameraMotion::ShotMove;
 
@@ -206,7 +282,7 @@ SceneID SceneNineBall::UpdateShot()
 	{
 		if (!m_inputManager->IsFrameKeyDown(DEBUG_FRAME_UPDATE_KEY) &&
 			!m_inputManager->IsKeyDown(DEBUG_FRAME_PLAY_KEY))
-			return SceneID::Keep;
+			return;
 	}
 
 	// ボール物理更新
@@ -217,11 +293,27 @@ SceneID SceneNineBall::UpdateShot()
 
 		for (int j = i + 1; j < NUM_BALL; j++)
 		{
-			m_physics->UpdateHitBallAndBall(m_balls[i], m_balls[j]);
+			bool isHit;
+			isHit = m_physics->UpdateHitBallAndBall(m_balls[i], m_balls[j], true);
+
+			// ファウル判定
+			if (isHit && i == 0)
+			{
+				m_rule->CheckHitFoul(j);
+			}
 		}
 
 		m_physics->UpdateHitBallAndTable(m_balls[i], m_table->GetTableWidth(), m_table->GetTableHeight());
-		m_physics->UpdateHitBallAndPockets(m_balls[i], m_table);
+
+		bool isPocket;
+		isPocket = m_physics->UpdateHitBallAndPockets(m_balls[i], m_table);
+
+		// ポケットフラグ更新&ファウル判定
+		if (isPocket)
+		{
+			m_rule->SetBallPocket(i, true);
+			m_pocketAnim->StartPocketAnim(i);
+		}
 	}
 	
 	// ボール移動
@@ -233,7 +325,14 @@ SceneID SceneNineBall::UpdateShot()
 			m_balls[i]->UpdateMove();
 	}
 
-	// 全てのボールが止まったら操作に戻る
+	// UI更新
+	m_pocketAnim->UpdateAnim();
+	if (m_rule->IsFoul())
+	{
+		m_pocketAnim->StartPocketAnim(-1); // ファウル文字
+	}
+
+	// 全てのボールが止まったか
 	bool isAllStoped = true;
 	for (int i = 0; i < NUM_BALL; i++)
 	{
@@ -245,17 +344,44 @@ SceneID SceneNineBall::UpdateShot()
 	}
 	if (isAllStoped)
 	{
-		m_playState = PlayState::Control;
+		// ファウル判定
+		m_rule->CheckTurnEndFoul();
+
+		// ターン更新
+		m_rule->ChangeTurn();
+
+		// ゲーム終了ならfinishへ、
+		// ファウルしていたらfoulのステートへ、そうでないならcontrolへ
+		if (m_rule->IsGameEnd())
+		{
+			m_playState = PlayState::Finish;
+		}
+		else if (m_rule->IsFoul())
+		{
+			m_playState = PlayState::Foul;
+		}
+		else
+		{
+			m_playState = PlayState::Control;
+		}
+
 		m_player->ResetDecideShot();
 		OutputDebugString(L"\n*****Finished Rolling Balls*****\n");
 	}
+}
 
-	return SceneID::Keep;
+void SceneNineBall::UpdateFinish()
+{
+	// 初期化
+	if (m_isStateChangeFrame)
+	{
+		m_pocketAnim->Clear();
+	}
 }
 
 void SceneNineBall::UpdateCamera()
 {
-	if (m_playState == PlayState::Control)
+	if (m_playState == PlayState::Foul || m_playState == PlayState::Control)
 	{
 		// スペースが押されたら切り替え
 		if (m_inputManager->IsFrameKeyDown(UseKeys::Space))
@@ -291,7 +417,6 @@ void SceneNineBall::UpdateCamera()
 bool SceneNineBall::Render()
 {
 	XMFLOAT4X4 viewMatrix, projectionMatrix;
-	XMFLOAT4X4 screenViewMatrix, orthoMatrix, screenWorldMatrix;
 	bool result;
 
 	// カメラ
@@ -307,11 +432,6 @@ bool SceneNineBall::Render()
 	{
 		m_dx3D->GetProjectionMatrix(&projectionMatrix);
 	}
-
-	// UI描画用の正射影、汎用ワールド、ビュー行列を取得
-	m_dx3D->GetOrthoMatrix(&orthoMatrix);
-	m_dx3D->GetWorldMatrix(&screenWorldMatrix);
-	m_dx3D->GetScreenViewMatrix(&screenViewMatrix);
 
 	// ボール描画
 	for (int i = 0; i < NUM_BALL; i++)
@@ -332,12 +452,67 @@ bool SceneNineBall::Render()
 		m_player->Render(m_dx3D, m_shaderManager, viewMatrix, projectionMatrix, m_light, m_balls[0]);
 	}
 
-	
+	// UI描画
 	m_dx3D->SpriteBegin();
-	m_testUI->Render(m_dx3D->GetDeviceContext(), 0, 0);
-	m_shaderManager->RenderTextureShader(m_dx3D->GetDeviceContext(), m_testUI->GetIndexCount(),
-		screenWorldMatrix, screenViewMatrix, orthoMatrix, m_testUI->GetTexture());
+	result = RenderUI();
 	m_dx3D->SpriteEnd();
+
+	if (!result) return false;
+	
+	return true;
+}
+
+bool SceneNineBall::RenderUI()
+{
+	bool result;
+	XMFLOAT4X4 screenViewMatrix, orthoMatrix, screenWorldMatrix;
+
+	// UI描画用の正射影、汎用ワールド、ビュー行列を取得
+	m_dx3D->GetOrthoMatrix(&orthoMatrix);
+	m_dx3D->GetWorldMatrix(&screenWorldMatrix);
+	m_dx3D->GetScreenViewMatrix(&screenViewMatrix);
+
+	// ポケット時のアニメーション描画
+	if (m_playState == PlayState::Shot)
+	{
+		result = m_pocketAnim->Render(m_dx3D, m_shaderManager, screenWorldMatrix, screenViewMatrix, orthoMatrix);
+		if (!result)return false;
+	}
+
+	// 残りボールの描画
+	result = m_billiardUI->RenderBallListUI(m_rule->GetBallPocketsFlag(), m_dx3D, m_shaderManager,
+		screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	if (!result)return false;
+
+	// 次に打つべきボールUIの描画
+	result = m_billiardUI->RenderNextBallUI(m_rule->GetNextBallNum(), m_rule->GetCurrentPlayer() ,m_dx3D, m_shaderManager,
+		screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	if (!result)return false;
+
+	// 左上のEXIT表記の描画
+	result = m_billiardUI->RenderExitUI(m_dx3D, m_shaderManager,
+		screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	if (!result)return false;
+
+	// 操作方法描画
+	if (m_playState == PlayState::Control)
+	{
+		result = m_billiardUI->RenderHelperUI(0, m_dx3D, m_shaderManager,
+			screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	}
+	else if(m_playState == PlayState::Foul)
+	{
+		result = m_billiardUI->RenderHelperUI(1, m_dx3D, m_shaderManager,
+			screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	}
+	if (!result)return false;
+
+	// フリードロップ文字描画
+	if (m_playState == PlayState::Foul)
+	{
+		result = m_billiardUI->RenderFreeDropUI(m_dx3D, m_shaderManager,
+			screenWorldMatrix, screenViewMatrix, orthoMatrix);
+	}
 
 	return true;
 }
