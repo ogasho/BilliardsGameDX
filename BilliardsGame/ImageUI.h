@@ -24,15 +24,18 @@ public:
 
 	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMINT2 screenSize,
 		int imageWidth, int imageHeight, const char* texFilename);
-	bool Render(ID3D11DeviceContext* deviceContext, int posX, int posY);
+	bool Render(ID3D11DeviceContext* deviceContext);
+
+	void SetRenderPosition(const XMINT2& pos, const XMFLOAT2& scale);
 
 	int GetIndexCount()const{ return m_indexCount; }
 	XMINT2 GetImageSize()const{ return m_imageSize; }
+	XMINT2 GetRenderPos()const{ return m_currentPos; }
 	ID3D11ShaderResourceView* GetTexture();
 
 private:
 	bool InitBuffers(ID3D11Device* device);
-	bool UpdateBuffers(ID3D11DeviceContext* deviceContext, int posX, int posY);
+	bool UpdateBuffers(ID3D11DeviceContext* deviceContext);
 	void RenderBuffers(ID3D11DeviceContext* deviceContext);
 
 	bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* texFilename);
@@ -45,6 +48,9 @@ private:
 
 	XMINT2 m_screenSize;
 	XMINT2 m_imageSize;
+	XMINT2 m_currentPos;
+	XMFLOAT2 m_currentScale;
 	XMINT2 m_previousPos;
+	XMFLOAT2 m_previousScale;
 };
 

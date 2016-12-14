@@ -20,14 +20,14 @@ Texture::~Texture()
 }
 
 
-bool Texture::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename)
+bool Texture::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename, bool flip)
 {
 	bool result;
 	HRESULT hResult;
 	int width, height;
 
 	// targaファイルをロード
-	result = LoadTarga(filename, &width, &height);
+	result = LoadTarga(filename, &width, &height, flip);
 	if (!result) return false;
 
 	// テクスチャ設定(32bit/RGBA)
@@ -74,7 +74,7 @@ bool Texture::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, con
 	return true;
 }
 
-bool Texture::LoadTarga(const char* filename, int* width, int* height)
+bool Texture::LoadTarga(const char* filename, int* width, int* height, bool flip)
 {
 	FILE* filePtr;
 	unsigned int count;
@@ -117,7 +117,11 @@ bool Texture::LoadTarga(const char* filename, int* width, int* height)
 
 	// 画像データをコピー
 	int index = 0;
-	int k = imageSize - ((*width) * bppByte); // 下から上へ色データを読み込んでいく
+	int k = 0; // flip = true:上から下へ / false:下から上へ　データを読み込んでいく
+	if (flip)
+	{
+		k = imageSize - ((*width) * bppByte);
+	}
 	for (int i = 0; i < (*height); i++)
 	{
 		for (int j = 0; j < (*width); j++)
@@ -134,7 +138,10 @@ bool Texture::LoadTarga(const char* filename, int* width, int* height)
 			index += 4;
 		}
 
-		k -= (*width) * (bppByte * 2);
+		if (flip)
+		{
+			k -= (*width) * (bppByte * 2);
+		}
 	}
 
 	// 開放

@@ -19,13 +19,14 @@ public:
 	Player();
 	~Player();
 
-	bool Init(DX11Manager* dx3D);
+	bool Init(const DX11Manager* dx3D);
 
 	void InitShotState(const XMFLOAT3& myBall, const XMFLOAT3& targetBall);
 	void UpdateInput(const InputManager* input);
 	bool UpdateFreeDrop(const InputManager* input, Ball* b, bool cameraFlip, bool isFirstperson);
 	void ShotBall(Ball* b);
-	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+	void ShotBallMaxPower(Ball* b);
+	bool Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light, const Ball* ball);
 
 	void ResetDecideShot(){ m_isDecide = false; }

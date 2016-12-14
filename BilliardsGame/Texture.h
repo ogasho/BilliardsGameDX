@@ -22,11 +22,11 @@ public:
 	Texture();
 	~Texture();
 
-	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename);
+	bool Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename, bool flip);
 	ID3D11ShaderResourceView* GetTexture()const{ return m_textureView; }
 
 private:
-	bool LoadTarga(const char* filename, int* width, int* height);
+	bool LoadTarga(const char* filename, int* width, int* height, bool flip);
 
 	unsigned char* m_targaData;
 	ID3D11Texture2D* m_texture;

@@ -8,6 +8,7 @@
 #include "SceneBase.h"
 #include "SceneNineBall.h"
 #include "SceneRotation.h"
+#include "SceneTitle.h"
 
 SceneManager::SceneManager()
 {
@@ -46,7 +47,7 @@ bool SceneManager::UpdateChangeScene(DX11Manager* dx3D,
 	switch (m_currentSceneID)
 	{
 	case SceneID::Title: // タイトル
-		//m_currentScene = new SceneBase; // 未実装
+		m_currentScene = new SceneTitle(dx3D, inputManager, shaderManager);
 		break;
 
 	case SceneID::G_NineBall: // メインゲーム(ナインボール)
@@ -86,7 +87,7 @@ bool SceneManager::Frame()
 		m_isChangeScene = true;
 		return true;
 	}
-	else if (sceneID != m_currentSceneID)
+	else
 	{
 		m_currentSceneID = sceneID;
 		m_isChangeScene = true;

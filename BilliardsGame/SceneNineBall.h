@@ -34,6 +34,7 @@ private:
 	void UpdateShot();
 	void UpdateFinish();
 	void UpdateCamera();
+	void RestoreBall(int ballNum, const XMFLOAT3& restorePos);
 	bool RenderUI();
 
 	bool m_isStateChangeFrame;

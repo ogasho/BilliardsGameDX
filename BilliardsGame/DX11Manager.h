@@ -20,8 +20,8 @@ public:
 	void Begin(float r, float g, float b, float a);
 	void End();
 
-	void SpriteBegin();
-	void SpriteEnd();
+	void SpriteBegin() const;
+	void SpriteEnd() const;
 
 	ID3D11Device* GetDevice()const{ return m_device; }
 	ID3D11DeviceContext* GetDeviceContext()const{ return m_deviceContext; }
@@ -41,10 +41,10 @@ private:
 	bool InitDirectX(int screenWidth, int screenHeight, bool vsync, HWND hWnd,
 		bool fullscreen, float screenDepth, float screenNear);
 
-	void TurnOnZBuffer();
-	void TurnOffZBuffer();
-	void TurnOnAlphaBlend();
-	void TurnOffAlphaBlend();
+	void TurnOnZBuffer() const;
+	void TurnOffZBuffer() const;
+	void TurnOnAlphaBlend() const;
+	void TurnOffAlphaBlend() const;
 	void GetDepthStencilState(D3D11_DEPTH_STENCIL_DESC* depthStencilDesc, bool depthEnable, bool stencilEnable);
 	void GetBlendState(D3D11_BLEND_DESC* blendStateDesc, bool blendEnable);
 

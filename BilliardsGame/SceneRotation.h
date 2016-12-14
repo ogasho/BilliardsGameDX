@@ -11,6 +11,10 @@ class BilliardPhysics;
 class Player;
 class Table;
 class FrameCount;
+class BilliardPocketAnim;
+class RotationRule;
+class BilliardUI;
+class RotationPointsUI;
 
 enum class PlayState;
 enum class CameraMotion;
@@ -26,9 +30,13 @@ public:
 	bool Render();
 
 private:
-	SceneID UpdateControl();
-	SceneID UpdateShot();
+	void UpdateFoul();
+	void UpdateControl();
+	void UpdateShot();
+	void UpdateFinish();
 	void UpdateCamera();
+	void RestoreBall(int ballNum, const XMFLOAT3& restorePos);
+	bool RenderUI();
 
 	bool m_isStateChangeFrame;
 	PlayState m_playState;
@@ -42,5 +50,10 @@ private:
 	Light* m_light;
 	BilliardPhysics* m_physics;
 	Table* m_table;
+	RotationRule* m_rule;
+	BilliardUI* m_billiardUI;
+	RotationPointsUI* m_pointsUI;
+
+	BilliardPocketAnim* m_pocketAnim;
 };
 

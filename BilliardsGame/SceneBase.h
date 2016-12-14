@@ -12,7 +12,7 @@
 class SceneBase
 {
 public:
-	SceneBase(DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
+	SceneBase(const DX11Manager* dx3D, const InputManager* inputManager, const ShaderManager* shaderManager)
 	{
 		m_dx3D = dx3D; 
 		m_inputManager = inputManager; 
@@ -27,6 +27,6 @@ public:
 protected:
 	const InputManager* m_inputManager;
 	const ShaderManager* m_shaderManager;
-	DX11Manager* m_dx3D;
+	const DX11Manager* m_dx3D;
 };
 

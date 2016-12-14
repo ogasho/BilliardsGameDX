@@ -19,8 +19,8 @@ public:
 	Ball();
 	~Ball();
 
-	bool Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjMesh* ballMesh);
-	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+	bool Init(const DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjMesh* ballMesh);
+	bool Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light);
 	bool UpdateMove();
 	bool UpdatePocket();

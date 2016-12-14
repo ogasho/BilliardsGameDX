@@ -30,7 +30,7 @@ Player::~Player()
 	SafeDelete(m_guideModel);
 }
 
-bool Player::Init(DX11Manager* dx3D)
+bool Player::Init(const DX11Manager* dx3D)
 {
 	bool result = false;
 
@@ -92,13 +92,6 @@ void Player::UpdateInput(const InputManager* input)
 		m_shotDirection -= 360.0f;
 	else if (m_shotDirection < -180.0f)
 		m_shotDirection += 360.0f;
-
-
-	/* テスト出力 */
-	if (isUpdated)
-	{
-		MyOutputDebugString(L"\n pow=%f, dir=%f\n", m_shotPower, m_shotDirection);
-	}
 }
 
 bool Player::UpdateFreeDrop(const InputManager* input, Ball* b, bool cameraFlip, bool isFirstperson)
@@ -207,7 +200,14 @@ void Player::ShotBall(Ball* b)
 	b->SetMoveVec(XMFLOAT3(xPower, 0.0f, zPower));
 }
 
-bool Player::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+void Player::ShotBallMaxPower(Ball* b)
+{
+	// (オートプレイ用)一番の強さで打つ
+	m_shotPower = MAX_SHOT_POWER;
+	ShotBall(b);
+}
+
+bool Player::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light, const Ball* ball)
 {
 	// 打つ方向/強さのガイドを描画

@@ -94,9 +94,13 @@
     <ClCompile Include="NineBallRule.cpp" />
     <ClCompile Include="ObjMesh.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="RotationPointsUI.cpp" />
+    <ClCompile Include="RotationRule.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SceneNineBall.cpp" />
     <ClCompile Include="SceneRotation.cpp" />
+    <ClCompile Include="SceneTitle.cpp" />
+    <ClCompile Include="SelectHelper.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Table.cpp" />
@@ -117,6 +121,8 @@
     <ClInclude Include="MainCameraMotion.h" />
     <ClInclude Include="NineBallRule.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="RotationPointsUI.h" />
+    <ClInclude Include="RotationRule.h" />
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Light.h" />
@@ -126,6 +132,8 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SceneNineBall.h" />
     <ClInclude Include="SceneRotation.h" />
+    <ClInclude Include="SceneTitle.h" />
+    <ClInclude Include="SelectHelper.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Table.h" />

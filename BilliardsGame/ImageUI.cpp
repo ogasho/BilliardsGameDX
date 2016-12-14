@@ -16,7 +16,6 @@ ImageUI::~ImageUI()
 	SafeRelease(m_vertexBuffer);
 	SafeRelease(m_indexBuffer);
 	SafeDelete(m_texture);
-
 }
 
 bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMINT2 screenSize,
@@ -34,6 +33,8 @@ bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMI
 	// 前フレーム位置情報
 	m_previousPos.x = -1;
 	m_previousPos.y = -1;
+	m_previousScale.x = 1.0f;
+	m_previousScale.y = 1.0f;
 
 	// バッファ初期化
 	result = InitBuffers(device);
@@ -49,18 +50,24 @@ bool ImageUI::Init(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMI
 	return true;
 }
 
-bool ImageUI::Render(ID3D11DeviceContext* deviceContext, int posX, int posY)
+bool ImageUI::Render(ID3D11DeviceContext* deviceContext)
 {
 	bool result;
 
 	// 動的頂点バッファを更新
-	result = UpdateBuffers(deviceContext, posX, posY);
+	result = UpdateBuffers(deviceContext);
 	if (!result) return false;
 
 	// 頂点バッファとインデックスバッファをパイプラインに流し込む
 	RenderBuffers(deviceContext);
 
 	return true;
+}
+
+void ImageUI::SetRenderPosition(const XMINT2& pos, const XMFLOAT2& scale)
+{
+	m_currentPos = pos;
+	m_currentScale = scale;
 }
 
 ID3D11ShaderResourceView* ImageUI::GetTexture()
@@ -131,22 +138,23 @@ bool ImageUI::InitBuffers(ID3D11Device* device)
 	return true;
 }
 
-bool ImageUI::UpdateBuffers(ID3D11DeviceContext* deviceContext, int posX, int posY)
+bool ImageUI::UpdateBuffers(ID3D11DeviceContext* deviceContext)
 {
 	HRESULT result;
 
 	// 描画位置が変更されていないなら、バッファの更新は行わない
-	if (posX == m_previousPos.x && posY == m_previousPos.y) return true;
+	if ((m_currentPos.x == m_previousPos.x && m_currentPos.y == m_previousPos.y) &&
+		(m_currentScale.x == m_previousScale.x && m_currentScale.y == m_previousScale.y)) return true;
 
-	// 座標更新
-	m_previousPos.x = posX;
-	m_previousPos.y = posY;
+	// 更新
+	m_previousPos = m_currentPos;
+	m_previousScale = m_currentScale;
 
 	// 画像の位置情報を計算 (座標基準は左上 + 画像サイズ)
-	float top = (float)(m_screenSize.y / 2 - posY);
-	float bottom = (float)(top - m_imageSize.y);
-	float left = (float)((m_screenSize.x / 2)*-1 + posX);
-	float right = (float)(left + m_imageSize.x);
+	float top = (float)(m_screenSize.y / 2 - m_currentPos.y);
+	float bottom = (float)(top - m_imageSize.y * m_currentScale.y);
+	float left = (float)((m_screenSize.x / 2)*-1 + m_currentPos.x);
+	float right = (float)(left + m_imageSize.x * m_currentScale.x);
 
 	// 更新用の頂点配列を作成
 	VertexType* vertices;
@@ -204,7 +212,7 @@ bool ImageUI::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceConte
 	bool result;
 
 	m_texture = new Texture;
-	result = m_texture->Init(device, deviceContext, texFilename);
+	result = m_texture->Init(device, deviceContext, texFilename, true);
 	if (!result) return false;
 
 	return true;

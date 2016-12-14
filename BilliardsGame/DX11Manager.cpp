@@ -65,13 +65,13 @@ void DX11Manager::End()
 	}
 }
 
-void DX11Manager::SpriteBegin()
+void DX11Manager::SpriteBegin() const
 {
 	TurnOffZBuffer();
 	TurnOnAlphaBlend();
 }
 
-void DX11Manager::SpriteEnd()
+void DX11Manager::SpriteEnd() const
 {
 	TurnOnZBuffer();
 	TurnOffAlphaBlend();
@@ -435,21 +435,21 @@ void DX11Manager::GetBlendState(D3D11_BLEND_DESC* blendStateDesc, bool blendEnab
 	blendStateDesc->RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 }
 
-void DX11Manager::TurnOnZBuffer()
+void DX11Manager::TurnOnZBuffer() const
 {
 	// 深度有効化
 	m_deviceContext->OMSetDepthStencilState(m_depthEnableStencilState, 1);
 	return;
 }
 
-void DX11Manager::TurnOffZBuffer()
+void DX11Manager::TurnOffZBuffer() const
 {
 	// 深度無効化
 	m_deviceContext->OMSetDepthStencilState(m_depthDisableStencilState, 1);
 	return;
 }
 
-void DX11Manager::TurnOnAlphaBlend()
+void DX11Manager::TurnOnAlphaBlend() const
 {
 	// アルファブレンド有効化
 	float blendFactor[4]{0.0f, 0.0f, 0.0f, 0.0f};
@@ -457,7 +457,7 @@ void DX11Manager::TurnOnAlphaBlend()
 	m_deviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
 }
 
-void DX11Manager::TurnOffAlphaBlend()
+void DX11Manager::TurnOffAlphaBlend() const
 {
 	// アルファブレンド無効化
 	float blendFactor[4]{0.0f, 0.0f, 0.0f, 0.0f};

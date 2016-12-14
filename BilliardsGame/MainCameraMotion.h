@@ -24,7 +24,7 @@ public:
 	MainCameraMotion();
 	~MainCameraMotion();
 
-	void Init(DX11Manager* dx3D, float tableWidth, float tableHeight);
+	void Init(const DX11Manager* dx3D, float tableWidth, float tableHeight);
 	void Render();
 
 	void SetBirdeyeCamera();

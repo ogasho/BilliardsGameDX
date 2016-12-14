@@ -19,8 +19,8 @@ public:
 	Table();
 	~Table();
 
-	bool Init(DX11Manager* dx3D, float tableWidth, float tableHeight);
-	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+	bool Init(const DX11Manager* dx3D, float tableWidth, float tableHeight);
+	bool Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light);
 	
 	float GetTableWidth()const{ return m_tableWidth; }

@@ -25,7 +25,7 @@ Table::~Table()
 	SafeDelete(m_pocketModel);
 }
 
-bool Table::Init(DX11Manager* dx3D, float tableWidth, float tableHeight)
+bool Table::Init(const DX11Manager* dx3D, float tableWidth, float tableHeight)
 {
 	bool result;
 
@@ -68,7 +68,7 @@ bool Table::Init(DX11Manager* dx3D, float tableWidth, float tableHeight)
 	return true;
 }
 
-bool Table::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+bool Table::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light)
 {
 	bool result;

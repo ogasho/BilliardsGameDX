@@ -18,15 +18,17 @@ public:
 	BilliardPocketAnim();
 	~BilliardPocketAnim();
 
-	bool Init(DX11Manager* dx3D, int maxBallNum);
+	bool Init(const DX11Manager* dx3D, int maxBallNum);
 	void UpdateAnim();
-	bool Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+	bool Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& orthoMatrix);
 	void Clear();
 
 	void StartPocketAnim(int ballNum);
 
 private:
+	void InitRenderPos(const DX11Manager* dx3D);
+
 	ImageUI* m_pocketImage;
 	ImageUI* m_ballImage;
 	ImageUI* m_FoulImage;

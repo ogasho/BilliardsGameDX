@@ -25,14 +25,17 @@ BilliardPocketAnim::~BilliardPocketAnim()
 	SafeDelete(m_ballImage);
 	SafeDelete(m_FoulImage);
 
-	for (int i = 0; i < m_maxBallNum; i++)
+	if (m_ballTextures != nullptr)
 	{
-		SafeDelete(m_ballTextures[i]);
+		for (int i = 0; i < m_maxBallNum; i++)
+		{
+			SafeDelete(m_ballTextures[i]);
+		}
+		SafeDeleteArr(m_ballTextures);
 	}
-	SafeDeleteArr(m_ballTextures);
 }
 
-bool BilliardPocketAnim::Init(DX11Manager* dx3D, int maxBallNum)
+bool BilliardPocketAnim::Init(const DX11Manager* dx3D, int maxBallNum)
 {
 	bool result;
 
@@ -47,27 +50,41 @@ bool BilliardPocketAnim::Init(DX11Manager* dx3D, int maxBallNum)
 		sprintf_s(texName, 20, "data/UI/b%dUI.tga", i + 1);
 
 		m_ballTextures[i] = new Texture;
-		result = m_ballTextures[i]->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), texName);
+		result = m_ballTextures[i]->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), texName, true);
 		if (!result) return false;
 	}
 
 	// UIƒNƒ‰ƒXƒ[ƒh
+	XMINT2 screenSize = dx3D->GetScreenSize();
+
 	m_pocketImage = new ImageUI;
-	result = m_pocketImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), dx3D->GetScreenSize(),
+	result = m_pocketImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), screenSize,
 		200, 100, "data/UI/pocket.tga");
 	if (!result) return false;
 
 	m_ballImage = new ImageUI;
-	result = m_ballImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), dx3D->GetScreenSize(),
+	result = m_ballImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), screenSize,
 		50, 50, nullptr);
 	if (!result) return false;
 
 	m_FoulImage = new ImageUI;
-	result = m_FoulImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), dx3D->GetScreenSize(),
+	result = m_FoulImage->Init(dx3D->GetDevice(), dx3D->GetDeviceContext(), screenSize,
 		150, 75, "data/UI/foul.tga");
 	if (!result) return false;
 
+	// ˆÊ’u‚ªŒÅ’è‚ÌUI‚ÌÀ•W‚ð“o˜^
+	InitRenderPos(dx3D);
+
 	return true;
+}
+
+void BilliardPocketAnim::InitRenderPos(const DX11Manager* dx3D)
+{
+	// "FOUL"
+	m_FoulImage->SetRenderPosition(
+		XMINT2(10,
+		dx3D->GetScreenSize().y - m_FoulImage->GetImageSize().y - m_pocketImage->GetImageSize().y),
+		XMFLOAT2(1, 1));
 }
 
 void BilliardPocketAnim::UpdateAnim()
@@ -79,7 +96,7 @@ void BilliardPocketAnim::UpdateAnim()
 	m_imagePosX -= (m_imagePosX - GOAL_ANIM_POS_X) * 0.1f;
 }
 
-bool BilliardPocketAnim::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+bool BilliardPocketAnim::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& orthoMatrix)
 {
 	bool result;
@@ -87,8 +104,7 @@ bool BilliardPocketAnim::Render(DX11Manager* dx3D, const ShaderManager* shaderMa
 	if (m_isFoul)
 	{
 		// "FOUL"•`‰æ
-		result = m_FoulImage->Render(dx3D->GetDeviceContext(), 10,
-			dx3D->GetScreenSize().y - m_FoulImage->GetImageSize().y - m_pocketImage->GetImageSize().y);
+		result = m_FoulImage->Render(dx3D->GetDeviceContext());
 		if (!result) return false;
 
 		shaderManager->RenderTextureShader(dx3D->GetDeviceContext(), m_pocketImage->GetIndexCount(),
@@ -101,8 +117,9 @@ bool BilliardPocketAnim::Render(DX11Manager* dx3D, const ShaderManager* shaderMa
 		return true;
 
 	// "POCKET"•`‰æ
-	result = m_pocketImage->Render(dx3D->GetDeviceContext(), (int)m_imagePosX,
-		dx3D->GetScreenSize().y - m_pocketImage->GetImageSize().y);
+	m_pocketImage->SetRenderPosition(
+		XMINT2((int)m_imagePosX, dx3D->GetScreenSize().y - m_pocketImage->GetImageSize().y), XMFLOAT2(1, 1));
+	result = m_pocketImage->Render(dx3D->GetDeviceContext());
 	if (!result) return false;
 
 	shaderManager->RenderTextureShader(dx3D->GetDeviceContext(), m_pocketImage->GetIndexCount(),
@@ -110,9 +127,12 @@ bool BilliardPocketAnim::Render(DX11Manager* dx3D, const ShaderManager* shaderMa
 	if (!result) return false;
 
 	// ƒ{[ƒ‹UI•`‰æ
-	result = m_ballImage->Render(dx3D->GetDeviceContext(),
-		(int)m_imagePosX + m_pocketImage->GetImageSize().x,
-		dx3D->GetScreenSize().y - m_pocketImage->GetImageSize().y + (int)(m_ballImage->GetImageSize().y * 0.5f));
+	m_ballImage->SetRenderPosition(
+		XMINT2((int)m_imagePosX + m_pocketImage->GetImageSize().x,
+		dx3D->GetScreenSize().y - m_pocketImage->GetImageSize().y + (int)(m_ballImage->GetImageSize().y * 0.5f))
+		,XMFLOAT2(1, 1));
+
+	result = m_ballImage->Render(dx3D->GetDeviceContext());
 	if (!result) return false;
 
 	shaderManager->RenderTextureShader(dx3D->GetDeviceContext(), m_ballImage->GetIndexCount(),

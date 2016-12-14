@@ -10,7 +10,7 @@
 #pragma comment(lib, "winmm.lib")
 #include <mmsystem.h>
 
-const SceneID START_SCENE = SceneID::G_NineBall;
+const SceneID START_SCENE = SceneID::Title;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -148,12 +148,6 @@ bool System::Frame()
 {
 	bool result = true;
 
-	// エスケープが押されたら終了
-	if (m_inputManager->IsKeyDown(VK_ESCAPE))
-	{
-		return false;
-	}
-
 	// 更新
 	result = m_sceneManager->Frame();
 	if (!result) return false;
@@ -165,7 +159,7 @@ bool System::Frame()
 	// シーンのフラグが変わっていたらシーンを切り替える
 	if (m_sceneManager->IsChangeScene())
 	{
-		m_sceneManager->UpdateChangeScene(m_dx3D, m_inputManager, m_shaderManager);
+		result = m_sceneManager->UpdateChangeScene(m_dx3D, m_inputManager, m_shaderManager);
 	}
 
 	// 入力情報更新

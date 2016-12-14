@@ -31,7 +31,7 @@ Ball::~Ball()
 	SafeDelete(m_model);
 }
 
-bool Ball::Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjMesh* ballMesh)
+bool Ball::Init(const DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjMesh* ballMesh)
 {
 	bool result;
 
@@ -61,7 +61,7 @@ bool Ball::Init(DX11Manager* dx3D, XMFLOAT3 position, int ballNumber, const ObjM
 	return true;
 }
 
-bool Ball::Render(DX11Manager* dx3D, const ShaderManager* shaderManager,
+bool Ball::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 	const XMFLOAT4X4& view, const XMFLOAT4X4& projection, const Light* light)
 {
 	bool result;

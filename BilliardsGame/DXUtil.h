@@ -15,8 +15,11 @@
 // ŠJ•ú
 template <class T> inline void SafeDelete(T& t)
 {
-	delete t;
-	t = nullptr;
+	if (t)
+	{
+		delete t;
+		t = nullptr;
+	}
 }
 
 template <class T> inline void SafeDeleteArr(T& t)

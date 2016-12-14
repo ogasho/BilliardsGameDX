@@ -21,7 +21,7 @@ MainCameraMotion::~MainCameraMotion()
 	SafeDelete(m_camera);
 }
 
-void MainCameraMotion::Init(DX11Manager* dx3D, float tableWidth, float tableHeight)
+void MainCameraMotion::Init(const DX11Manager* dx3D, float tableWidth, float tableHeight)
 {
 	// ƒJƒƒ‰İ’è‰Šú‰»
 	m_camera = new Camera;

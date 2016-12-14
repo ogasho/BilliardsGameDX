@@ -156,7 +156,7 @@ bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext
 
 	m_texture = new Texture;
 
-	result = m_texture->Init(device, deviceContext, filename);
+	result = m_texture->Init(device, deviceContext, filename, false);
 	if (!result) return false;
 	
 	return true;
