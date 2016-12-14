@@ -11,6 +11,11 @@ Light::~Light()
 
 }
 
+void Light::SetAmbientColor(float r, float g, float b, float a)
+{
+	 m_ambientColor = XMFLOAT4(r, g, b, a);
+}
+
 void Light::SetDiffuseColor(float r, float g, float b, float a)
 {
 	m_diffuseColor = XMFLOAT4(r, g, b, a);

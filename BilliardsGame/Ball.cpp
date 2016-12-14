@@ -73,7 +73,7 @@ bool Ball::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 
 	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_model->GetIndexCount(),
 		worldMatrix, view, projection, m_model->GetTexture(),
-		light->GetDirection(), light->GetDiffuseColor());
+		light->GetDirection(), light->GetDiffuseColor(), light->GetAmbientColor());
 
 	return result;
 }

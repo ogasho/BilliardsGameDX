@@ -227,7 +227,7 @@ bool Player::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 
 	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_guideModel->GetIndexCount(),
 		worldMatrix, view, projection, m_guideModel->GetTexture(),
-		light->GetDirection(), light->GetDiffuseColor());
+		light->GetDirection(), light->GetDiffuseColor(), light->GetAmbientColor());
 
 	return result;
 }

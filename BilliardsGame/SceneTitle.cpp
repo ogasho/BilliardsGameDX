@@ -111,6 +111,7 @@ bool SceneTitle::Init()
 
 	// ƒ‰ƒCƒg‰Šú‰»
 	m_light = new Light;
+	m_light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
 	m_light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_light->SetDirection(0.0f, -2.0f, 1.0f);
 

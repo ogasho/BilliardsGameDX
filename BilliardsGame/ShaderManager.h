@@ -20,7 +20,8 @@ public:
 
 	bool RenderLightShader(ID3D11DeviceContext* deviceContext, int indexCount,
 		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,
-		ID3D11ShaderResourceView* tex, const XMFLOAT3& lightDirection, const XMFLOAT4& diffuseColor) const;
+		ID3D11ShaderResourceView* tex,
+		const XMFLOAT3& lightDirection, const XMFLOAT4& diffuseColor, const XMFLOAT4& ambientColor) const;
 
 	bool RenderTextureShader(ID3D11DeviceContext* deviceContext, int indexCount,
 		const XMFLOAT4X4& worldMatrix, const XMFLOAT4X4& viewMatrix, const XMFLOAT4X4& projectionMatrix,

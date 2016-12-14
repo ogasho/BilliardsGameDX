@@ -3,8 +3,9 @@
 Texture2D shaderTexture;
 SamplerState SampleType;
 
-cbuffer LightShader
+cbuffer LightBuffer
 {
+	float4 ambientColor;
 	float4 diffuseColor;
 	float3 lightDirection;
 	float padding;
@@ -25,13 +26,21 @@ float4 LightPixelShader(PS_IN input) : SV_TARGET
 	float4 color;
 
 	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	color = ambientColor;
 
 	// ピクセルの光の量を計算
 	lightDir = -lightDirection;
 	lightIntensity = saturate(dot(input.normal, lightDir));
 
-	// 光の値をテクスチャのピクセル値と結合
-	color = saturate(diffuseColor * lightIntensity);
+	// 光が当たっているならば
+	if (lightIntensity > 0.0f)
+	{
+		// 拡散色を加える
+		color += (diffuseColor * lightIntensity);
+	}
+
+	// 光色とテクスチャ色を結合
+	color = saturate(color);
 	color = color * textureColor;
 
 	return color;

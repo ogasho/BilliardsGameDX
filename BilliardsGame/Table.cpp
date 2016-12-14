@@ -81,7 +81,7 @@ bool Table::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 
 	result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_tableModel->GetIndexCount(),
 		worldMatrix, view, projection, m_tableModel->GetTexture(),
-		light->GetDirection(), light->GetDiffuseColor());
+		light->GetDirection(), light->GetDiffuseColor(), light->GetAmbientColor());
 	if (!result) return false;
 
 	// ポケット描画
@@ -93,7 +93,7 @@ bool Table::Render(const DX11Manager* dx3D, const ShaderManager* shaderManager,
 
 		result = shaderManager->RenderLightShader(dx3D->GetDeviceContext(), m_pocketModel->GetIndexCount(),
 			worldMatrix, view, projection, m_pocketModel->GetTexture(),
-			light->GetDirection(), light->GetDiffuseColor());
+			light->GetDirection(), light->GetDiffuseColor(), light->GetAmbientColor());
 		if (!result) return false;
 	}
 
